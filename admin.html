@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Ven y Baila Lessons</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            line-height: 1.6;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .header {
+            background: linear-gradient(135deg, #f59e0b, #dc2626);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: #1a1a1a;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+        }
+        .tab {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #ccc;
+        }
+        .tab.active {
+            background: #f59e0b;
+            color: #000;
+            border-color: #f59e0b;
+        }
+        .section {
+            background: #1a1a1a;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 1.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background: #2a2a2a;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+        .btn-primary { background: #f59e0b; color: #000; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.85rem; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #1a1a1a;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #444;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: #ccc;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.6rem;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: white;
+        }
+        .message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .message.success { background: #064e3b; color: #6ee7b7; }
+        .message.error { background: #7f1d1d; color: #fca5a5; }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginView">
+    <div style="max-width:400px;margin:8rem auto;padding:2rem;background:#1a1a1a;border-radius:12px;border:1px solid #333;">
+        <h2 style="text-align:center;margin-bottom:1.5rem;color:#f59e0b;">🔐 Acceso Admin</h2>
+        <div id="loginMsg" class="message"></div>
+        <form id="loginForm">
+            <input type="password" id="adminPwd" placeholder="Contraseña" style="width:100%;padding:0.75rem;margin-bottom:1rem;background:#2a2a2a;border:1px solid #444;border-radius:6px;color:white;" required>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Acceder</button>
+        </form>
+    </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminView" style="display:none;">
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🎭 Panel de Administración</h1>
+                <p>Ven y Baila Lessons</p>
+            </div>
+            <button onclick="logout()" class="btn btn-danger">Salir</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="statUsers">0</div>
+                <div>Usuarios</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statNiveles">0</div>
+                <div>Niveles</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statClases">0</div>
+                <div>Clases</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="statSueltos">0</div>
+                <div>Videos Sueltos</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('usuarios')"> Usuarios</button>
+            <button class="tab" onclick="showTab('niveles')"> Niveles</button>
+            <button class="tab" onclick="showTab('clases')">📚 Clases</button>
+            <button class="tab" onclick="showTab('sueltos')">🎥 Videos Sueltos</button>
+            <button class="tab" onclick="showTab('nuevo')">➕ Nuevo Usuario</button>
+        </div>
+
+        <!-- USUARIOS -->
+        <div id="tab-usuarios" class="tab-content">
+            <div class="section">
+                <h3>Usuarios Registrados</h3>
+                <table>
+                    <thead>
+                        <tr><th>Código</th><th>Nombre</th><th>Teléfono</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="usersTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NIVELES -->
+        <div id="tab-niveles" class="tab-content" style="display:none;">
+            <div class="section">
+                <h3>Niveles <button class="btn btn-success btn-sm" onclick="openModal('modalNivel')">+ Nuevo</button></h3>
+                <table>
+                    <thead>
+                        <tr><th>Nombre</th><th>Tipo</th><th>Nivel</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="nivelesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CLASES -->
+        <div id="tab-clases" class="tab-content" style="display:none;">
+            <div class="section">
+                <h3>Clases <button class="btn btn-success btn-sm" onclick="openModal('modalClase')">+ Nueva</button></h3>
+                <table>
+                    <thead>
+                        <tr><th>Título</th><th>Nivel</th><th>URL Video</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="clasesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIDEOS SUELTOS -->
+        <div id="tab-sueltos" class="tab-content" style="display:none;">
+            <div class="section">
+                <h3>Videos Sueltos <button class="btn btn-success btn-sm" onclick="openModal('modalSuelto')">+ Nuevo</button></h3>
+                <table>
+                    <thead>
+                        <tr><th>Título</th><th>Categoría</th><th>URL</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="sueltosTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NUEVO USUARIO -->
+        <div id="tab-nuevo" class="tab-content" style="display:none;">
+            <div class="section">
+                <h3>Crear Nuevo Usuario</h3>
+                <div id="newUserMsg" class="message"></div>
+                <form id="newUserForm">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="newUserName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="newUserPhone" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generar Código y Crear</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALES -->
+<div id="modalAccesos" class="modal">
+    <div class="modal-content">
+        <h3 id="accesosTitle">Gestionar Accesos</h3>
+        <div id="accesosBody" style="margin-top:1rem;"></div>
+        <button onclick="closeModal('modalAccesos')" class="btn btn-primary" style="margin-top:1rem;">Cerrar</button>
+    </div>
+</div>
+
+<div id="modalNivel" class="modal">
+    <div class="modal-content">
+        <h3>Nuevo Nivel</h3>
+        <form id="formNivel">
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="nivelNombre" required>
+            </div>
+            <div class="form-group">
+                <label>Tipo</label>
+                <select id="nivelTipo">
+                    <option>Salsa</option><option>Bachata</option><option>Musicalidad</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nivel</label>
+                <select id="nivelNivel">
+                    <option>Principiante</option><option>Intermedio</option><option>Avanzado</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Crear</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalClase" class="modal">
+    <div class="modal-content">
+        <h3>Nueva Clase</h3>
+        <form id="formClase">
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" id="claseTitulo" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="claseDesc" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Nivel</label>
+                <select id="claseNivel" required></select>
+            </div>
+            <div class="form-group">
+                <label>URL Video</label>
+                <input type="text" id="claseVideo" required>
+            </div>
+            <div class="form-group">
+                <label>Thumbnail</label>
+                <input type="text" id="claseThumb">
+            </div>
+            <button type="submit" class="btn btn-primary">Crear</button>
+        </form>
+    </div>
+</div>
+
+<div id="modalSuelto" class="modal">
+    <div class="modal-content">
+        <h3>Nuevo Video Suelto</h3>
+        <form id="formSuelto">
+            <div class="form-group">
+                <label>Título</label>
+                <input type="text" id="sueltoTitulo" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="sueltoDesc" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select id="sueltoCat">
+                    <option>Salsa</option><option>Bachata</option><option>Musicalidad</option><option>General</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Duración</label>
+                <input type="text" id="sueltoDur" placeholder="5:30">
+            </div>
+            <div class="form-group">
+                <label>URL Video</label>
+                <input type="text" id="sueltoVideo" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Crear</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    // ️ CONFIGURACIÓN - CAMBIA ESTO
+    const SUPABASE_URL = 'https://fcevcdgzmaydmvjacdex.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjZXZjZGd6bWF5ZG12amFjZGV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4NzkwNTMsImV4cCI6MjA3NzQ1NTA1M30.dbYvNFsg_9c85ze79cUmKewOVDe80FV5Z-GInKjHLzo';
+    const ADMIN_PWD = 'DanceAdmin2024!';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let users=[], niveles=[], clases=[], sueltos=[], access=[];
+
+    // LOGIN
+    document.getElementById('loginForm').addEventListener('submit', e => {
+        e.preventDefault();
+        if (document.getElementById('adminPwd').value === ADMIN_PWD) {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('adminView').style.display = 'block';
+            loadData();
+        } else {
+            showMsg('loginMsg', 'Contraseña incorrecta', 'error');
+        }
+    });
+
+    function logout() {
+        document.getElementById('adminView').style.display = 'none';
+        document.getElementById('loginView').style.display = 'block';
+    }
+
+    function showTab(name) {
+        document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${name}`).style.display = 'block';
+        event.target.classList.add('active');
+        if (name === 'clases') loadNivelesSelect();
+    }
+
+    function openModal(id) {
+        if (id === 'modalClase') loadNivelesSelect();
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function showMsg(id, text, type) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.className = `message ${type}`;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 3000);
+    }
+
+    async function loadData() {
+        const [u, n, c, s, a] = await Promise.all([
+            supabase.from('users').select('*'),
+            supabase.from('niveles').select('*'),
+            supabase.from('clases').select('*, niveles(nombre)'),
+            supabase.from('videos_sueltos').select('*'),
+            supabase.from('user_access').select('*')
+        ]);
+        users = u.data || [];
+        niveles = n.data || [];
+        clases = c.data || [];
+        sueltos = s.data || [];
+        access = a.data || [];
+
+        document.getElementById('statUsers').textContent = users.length;
+        document.getElementById('statNiveles').textContent = niveles.length;
+        document.getElementById('statClases').textContent = clases.length;
+        document.getElementById('statSueltos').textContent = sueltos.length;
+
+        renderUsers();
+        renderNiveles();
+        renderClases();
+        renderSueltos();
+    }
+
+    function renderUsers() {
+        document.getElementById('usersTable').innerHTML = users.map(u => `
+            <tr>
+                <td><strong style="color:#f59e0b">${u.access_code||'-'}</strong></td>
+                <td>${u.name||'-'}</td>
+                <td>${u.phone||'-'}</td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}','${u.name}','${u.access_code||''}')">🔑 Accesos</button>
+                    <button class="btn btn-sm btn-danger" onclick="del('users','${u.id}')">🗑️</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderNiveles() {
+        document.getElementById('nivelesTable').innerHTML = niveles.map(n => `
+            <tr>
+                <td>${n.nombre||n.name||'-'}</td>
+                <td>${n.tipo_baile||n.dance_type||'-'}</td>
+                <td>${n.nivel||'-'}</td>
+                <td><button class="btn btn-sm btn-danger" onclick="del('niveles','${n.id}')">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderClases() {
+        document.getElementById('clasesTable').innerHTML = clases.map(c => `
+            <tr>
+                <td>${c.titulo||'-'}</td>
+                <td>${c.niveles?.nombre||c.nivel_id?.substring(0,8)||'-'}</td>
+                <td>${c.video_url?.substring(0,30)||'-'}...</td>
+                <td><button class="btn btn-sm btn-danger" onclick="del('clases','${c.id}')">🗑️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderSueltos() {
+        document.getElementById('sueltosTable').innerHTML = sueltos.map(s => `
+            <tr>
+                <td>${s.titulo||'-'}</td>
+                <td>${s.categoria||'-'}</td>
+                <td>${s.video_url?.substring(0,30)||'-'}...</td>
+                <td><button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">️</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function loadNivelesSelect() {
+        const sel = document.getElementById('claseNivel');
+        sel.innerHTML = niveles.map(n => `<option value="${n.id}">${n.nombre||n.name}</option>`).join('');
+    }
+
+    // FORMS
+    document.getElementById('newUserForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const name = document.getElementById('newUserName').value;
+        const phone = document.getElementById('newUserPhone').value;
+        let code, exists = true;
+        while (exists) {
+            code = 'SM' + Math.floor(10000 + Math.random() * 90000);
+            const {data} = await supabase.from('users').select('id').eq('access_code', code).single();
+            if (!data) exists = false;
+        }
+        const {error} = await supabase.from('users').insert([{name, phone, access_code: code}]);
+        if (error) showMsg('newUserMsg', error.message, 'error');
+        else {
+            showMsg('newUserMsg', `✅ Código: ${code}`, 'success');
+            document.getElementById('newUserForm').reset();
+            loadData();
+        }
+    });
+
+    document.getElementById('formNivel').addEventListener('submit', async e => {
+        e.preventDefault();
+        await supabase.from('niveles').insert([{
+            nombre: document.getElementById('nivelNombre').value,
+            tipo_baile: document.getElementById('nivelTipo').value,
+            nivel: document.getElementById('nivelNivel').value
+        }]);
+        closeModal('modalNivel');
+        loadData();
+    });
+
+    document.getElementById('formClase').addEventListener('submit', async e => {
+        e.preventDefault();
+        await supabase.from('clases').insert([{
+            titulo: document.getElementById('claseTitulo').value,
+            descripcion: document.getElementById('claseDesc').value,
+            nivel_id: document.getElementById('claseNivel').value,
+            video_url: document.getElementById('claseVideo').value,
+            thumbnail_url: document.getElementById('claseThumb').value
+        }]);
+        closeModal('modalClase');
+        loadData();
+    });
+
+    document.getElementById('formSuelto').addEventListener('submit', async e => {
+        e.preventDefault();
+        await supabase.from('videos_sueltos').insert([{
+            titulo: document.getElementById('sueltoTitulo').value,
+            descripcion: document.getElementById('sueltoDesc').value,
+            categoria: document.getElementById('sueltoCat').value,
+            duracion: document.getElementById('sueltoDur').value,
+            video_url: document.getElementById('sueltoVideo').value
+        }]);
+        closeModal('modalSuelto');
+        loadData();
+    });
+
+    async function manageAccess(uid, name, code) {
+        document.getElementById('accesosTitle').textContent = `${name} (${code})`;
+        const userAcc = access.filter(a => a.user_id === uid).map(a => a.nivel_id);
+        const current = niveles.filter(n => userAcc.includes(n.id));
+        const available = niveles.filter(n => !userAcc.includes(n.id));
+        
+        let html = '<h4>Accesos Actuales</h4>';
+        html += current.length ? current.map(n => `
+            <div style="display:flex;justify-content:space-between;padding:0.5rem;border-bottom:1px solid #333;">
+                <span>${n.nombre||n.name}</span>
+                <button class="btn btn-sm btn-danger" onclick="removeAccess('${uid}','${n.id}')">Quitar</button>
+            </div>
+        `).join('') : '<p style="color:#999">Sin accesos</p>';
+        
+        html += '<h4 style="margin-top:1rem">Disponibles</h4>';
+        html += available.length ? available.map(n => `
+            <div style="display:flex;justify-content:space-between;padding:0.5rem;border-bottom:1px solid #333;">
+                <span>${n.nombre||n.name}</span>
+                <button class="btn btn-sm btn-success" onclick="addAccess('${uid}','${n.id}')">Agregar</button>
+            </div>
+        `).join('') : '<p style="color:#999">No hay más</p>';
+        
+        document.getElementById('accesosBody').innerHTML = html;
+        openModal('modalAccesos');
+    }
+
+    async function addAccess(uid, nid) {
+        await supabase.from('user_access').insert([{user_id: uid, nivel_id: nid}]);
+        loadData();
+        const u = users.find(x => x.id === uid);
+        if (u) manageAccess(uid, u.name, u.access_code);
+    }
+
+    async function removeAccess(uid, nid) {
+        await supabase.from('user_access').delete().eq('user_id', uid).eq('nivel_id', nid);
+        loadData();
+        const u = users.find(x => x.id === uid);
+        if (u) manageAccess(uid, u.name, u.access_code);
+    }
+
+    async function del(table, id) {
+        if (!confirm('¿Eliminar?')) return;
+        await supabase.from(table).delete().eq('id', id);
+        loadData();
+    }
+
+    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
+        if (e.target === m) m.classList.remove('active');
+    }));
+</script>
+
+</body>
+</html>
