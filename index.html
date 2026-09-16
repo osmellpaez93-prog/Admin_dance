@@ -230,7 +230,7 @@
         <button class="tab active" onclick="showTab('usuarios')"> Usuarios</button>
         <button class="tab" onclick="showTab('niveles')">📊 Niveles</button>
         <button class="tab" onclick="showTab('clases')">📚 Clases</button>
-        <button class="tab" onclick="showTab('sueltos')">🎥 Videos Sueltos</button>
+        <button class="tab" onclick="showTab('sueltos')"> Videos Sueltos</button>
         <button class="tab" onclick="showTab('nuevo')"> Nuevo Usuario</button>
     </div>
 
@@ -286,7 +286,7 @@
             <div style="overflow-x:auto;">
                 <table>
                     <thead>
-                        <tr><th>Título</th><th>Categoría</th><th>URL</th><th>Acciones</th></tr>
+                        <tr><th>Título</th><th>Nivel</th><th>URL</th><th>Acciones</th></tr>
                     </thead>
                     <tbody id="sueltosTable"></tbody>
                 </table>
@@ -453,22 +453,25 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Categoría</label>
-                    <select id="editSueltoCat">
-                        <option value="Salsa">Salsa</option>
-                        <option value="Bachata">Bachata</option>
-                        <option value="Musicalidad">Musicalidad</option>
-                        <option value="General">General</option>
+                    <label>Nivel (opcional)</label>
+                    <select id="editSueltoNivel">
+                        <option value="">-- Sin nivel --</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Duración</label>
-                    <input type="text" id="editSueltoDur" placeholder="5:30">
+                    <label>Orden</label>
+                    <input type="number" id="editSueltoOrden" value="1" min="1">
                 </div>
             </div>
-            <div class="form-group">
-                <label>URL del Video *</label>
-                <input type="text" id="editSueltoVideo" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>URL del Video *</label>
+                    <input type="text" id="editSueltoVideo" required>
+                </div>
+                <div class="form-group">
+                    <label>URL Thumbnail</label>
+                    <input type="text" id="editSueltoThumb">
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
         </form>
@@ -572,22 +575,25 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Categoría</label>
-                    <select id="sueltoCat">
-                        <option value="Salsa">Salsa</option>
-                        <option value="Bachata">Bachata</option>
-                        <option value="Musicalidad">Musicalidad</option>
-                        <option value="General">General</option>
+                    <label>Nivel (opcional)</label>
+                    <select id="sueltoNivel">
+                        <option value="">-- Sin nivel --</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Duración</label>
-                    <input type="text" id="sueltoDur" placeholder="5:30">
+                    <label>Orden</label>
+                    <input type="number" id="sueltoOrden" value="1" min="1">
                 </div>
             </div>
-            <div class="form-group">
-                <label>URL del Video *</label>
-                <input type="text" id="sueltoVideo" placeholder="https://youtube.com/..." required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>URL del Video *</label>
+                    <input type="text" id="sueltoVideo" placeholder="https://youtube.com/..." required>
+                </div>
+                <div class="form-group">
+                    <label>URL Thumbnail</label>
+                    <input type="text" id="sueltoThumb" placeholder="/thumbnails/...">
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Crear Video</button>
         </form>
@@ -596,7 +602,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ⚠️ CONFIGURACIÓN - CAMBIA ESTO POR TUS CREDENCIALES
+    // ⚠️ CONFIGURACIÓN
     const SUPABASE_URL = 'https://lhtfrzhwzphryjhgcqjw.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxodGZyemh3enBocnlqaGdjcWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTU3NDksImV4cCI6MjA4Njk3MTc0OX0.1HSklzboeOSAnCip3V39LcYZIJWLMZzgWuCvy7qBl2I';
     
@@ -615,7 +621,8 @@
     }
 
     function openModal(id) {
-        if (id === 'modalClase') loadNivelesSelect();
+        if (id === 'modalClase' || id === 'modalEditClase') loadNivelesSelect();
+        if (id === 'modalSuelto' || id === 'modalEditSuelto') loadSueltoNivelesSelect();
         document.getElementById(id).classList.add('active');
     }
 
@@ -636,7 +643,7 @@
             const [u, n, c, s, a] = await Promise.all([
                 supabaseClient.from('users').select('*').order('created_at', { ascending: false }),
                 supabaseClient.from('niveles').select('*'),
-                supabaseClient.from('clases').select('*, niveles(nombre)'),
+                supabaseClient.from('clases').select('*'),
                 supabaseClient.from('videos_sueltos').select('*'),
                 supabaseClient.from('user_access').select('*')
             ]);
@@ -658,7 +665,7 @@
             renderSueltos();
         } catch (err) {
             console.error('Error cargando datos:', err);
-            alert('Error al cargar datos. Verifica la consola.');
+            alert('Error al cargar datos: ' + err.message);
         }
     }
 
@@ -695,7 +702,7 @@
         document.getElementById('clasesTable').innerHTML = clases.map(c => `
             <tr>
                 <td>${c.titulo||'-'}</td>
-                <td>${c.niveles?.nombre||c.nivel_id?.substring(0,8)||'-'}</td>
+                <td>${niveles.find(n => n.id === c.nivel_id)?.nombre || 'General'}</td>
                 <td>${c.video_url?.substring(0,30)||'-'}...</td>
                 <td>
                     <button class="btn btn-sm btn-warning" onclick="editClase('${c.id}')">✏️</button>
@@ -709,7 +716,7 @@
         document.getElementById('sueltosTable').innerHTML = sueltos.map(s => `
             <tr>
                 <td>${s.titulo||'-'}</td>
-                <td>${s.categoria||'-'}</td>
+                <td>${s.nivel_id ? (niveles.find(n => n.id === s.nivel_id)?.nombre || '-') : 'General'}</td>
                 <td>${s.video_url?.substring(0,30)||'-'}...</td>
                 <td>
                     <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
@@ -720,16 +727,24 @@
     }
 
     function loadNivelesSelect() {
-        const sel = document.getElementById('claseNivel');
-        const editSel = document.getElementById('editClaseNivel');
         const html = niveles.map(n => `<option value="${n.id}">${n.nombre||n.name} (${n.tipo_baile||n.dance_type})</option>`).join('');
-        if (sel) sel.innerHTML = html;
-        if (editSel) editSel.innerHTML = html;
+        ['claseNivel', 'editClaseNivel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = html;
+        });
+    }
+
+    function loadSueltoNivelesSelect() {
+        const html = '<option value="">-- Sin nivel --</option>' + 
+            niveles.map(n => `<option value="${n.id}">${n.nombre||n.name}</option>`).join('');
+        ['sueltoNivel', 'editSueltoNivel'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = html;
+        });
     }
 
     // ========== EDITAR ==========
     
-    // Editar Usuario
     function editUser(id) {
         const user = users.find(u => u.id === id);
         if (!user) return;
@@ -752,7 +767,6 @@
         loadData();
     });
 
-    // Editar Nivel
     function editNivel(id) {
         const nivel = niveles.find(n => n.id === id);
         if (!nivel) return;
@@ -776,7 +790,6 @@
         loadData();
     });
 
-    // Editar Clase
     function editClase(id) {
         const clase = clases.find(c => c.id === id);
         if (!clase) return;
@@ -809,28 +822,33 @@
         loadData();
     });
 
-    // Editar Video Suelto
     function editSuelto(id) {
         const suelto = sueltos.find(s => s.id === id);
         if (!suelto) return;
         document.getElementById('editSueltoId').value = suelto.id;
         document.getElementById('editSueltoTitulo').value = suelto.titulo || '';
         document.getElementById('editSueltoDesc').value = suelto.descripcion || '';
-        document.getElementById('editSueltoCat').value = suelto.categoria || 'General';
-        document.getElementById('editSueltoDur').value = suelto.duracion || '';
+        document.getElementById('editSueltoOrden').value = suelto.orden || 1;
         document.getElementById('editSueltoVideo').value = suelto.video_url || '';
+        document.getElementById('editSueltoThumb').value = suelto.thumbnail_url || '';
+        loadSueltoNivelesSelect();
+        setTimeout(() => {
+            document.getElementById('editSueltoNivel').value = suelto.nivel_id || '';
+        }, 100);
         openModal('modalEditSuelto');
     }
 
     document.getElementById('formEditSuelto').addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('editSueltoId').value;
+        const nivelId = document.getElementById('editSueltoNivel').value || null;
         const { error } = await supabaseClient.from('videos_sueltos').update({
             titulo: document.getElementById('editSueltoTitulo').value,
             descripcion: document.getElementById('editSueltoDesc').value,
-            categoria: document.getElementById('editSueltoCat').value,
-            duracion: document.getElementById('editSueltoDur').value,
-            video_url: document.getElementById('editSueltoVideo').value
+            nivel_id: nivelId,
+            video_url: document.getElementById('editSueltoVideo').value,
+            thumbnail_url: document.getElementById('editSueltoThumb').value,
+            orden: parseInt(document.getElementById('editSueltoOrden').value) || 1
         }).eq('id', id);
         if (error) { alert('Error: ' + error.message); return; }
         closeModal('modalEditSuelto');
@@ -894,12 +912,14 @@
 
     document.getElementById('formSuelto').addEventListener('submit', async e => {
         e.preventDefault();
+        const nivelId = document.getElementById('sueltoNivel').value || null;
         const { error } = await supabaseClient.from('videos_sueltos').insert([{
             titulo: document.getElementById('sueltoTitulo').value,
             descripcion: document.getElementById('sueltoDesc').value,
-            categoria: document.getElementById('sueltoCat').value,
-            duracion: document.getElementById('sueltoDur').value,
-            video_url: document.getElementById('sueltoVideo').value
+            nivel_id: nivelId,
+            video_url: document.getElementById('sueltoVideo').value,
+            thumbnail_url: document.getElementById('sueltoThumb').value,
+            orden: parseInt(document.getElementById('sueltoOrden').value) || 1
         }]);
         if (error) { alert('Error: ' + error.message); return; }
         closeModal('modalSuelto');
