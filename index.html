@@ -98,6 +98,8 @@
         .btn-danger:hover { background: #b91c1c; }
         .btn-success { background: #10b981; color: white; }
         .btn-success:hover { background: #059669; }
+        .btn-warning { background: #f59e0b; color: #000; }
+        .btn-warning:hover { background: #d97706; }
         .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.85rem; }
         
         .modal {
@@ -225,7 +227,7 @@
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('usuarios')">👥 Usuarios</button>
+        <button class="tab active" onclick="showTab('usuarios')"> Usuarios</button>
         <button class="tab" onclick="showTab('niveles')">📊 Niveles</button>
         <button class="tab" onclick="showTab('clases')">📚 Clases</button>
         <button class="tab" onclick="showTab('sueltos')">🎥 Videos Sueltos</button>
@@ -322,6 +324,154 @@
             <button class="close-btn" onclick="closeModal('modalAccesos')">&times;</button>
         </div>
         <div id="accesosBody"></div>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR USUARIO -->
+<div id="modalEditUser" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Editar Usuario</h3>
+            <button class="close-btn" onclick="closeModal('modalEditUser')">&times;</button>
+        </div>
+        <form id="formEditUser">
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <label>Código (no editable)</label>
+                <input type="text" id="editUserCode" disabled style="background:#333;">
+            </div>
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="editUserName" required>
+            </div>
+            <div class="form-group">
+                <label>Teléfono *</label>
+                <input type="tel" id="editUserPhone" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR NIVEL -->
+<div id="modalEditNivel" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Editar Nivel</h3>
+            <button class="close-btn" onclick="closeModal('modalEditNivel')">&times;</button>
+        </div>
+        <form id="formEditNivel">
+            <input type="hidden" id="editNivelId">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="editNivelNombre" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo de Baile *</label>
+                    <select id="editNivelTipo" required>
+                        <option value="Salsa">Salsa</option>
+                        <option value="Bachata">Bachata</option>
+                        <option value="Musicalidad">Musicalidad</option>
+                        <option value="Kizomba">Kizomba</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nivel *</label>
+                    <select id="editNivelNivel" required>
+                        <option value="Principiante">Principiante</option>
+                        <option value="Intermedio">Intermedio</option>
+                        <option value="Avanzado">Avanzado</option>
+                        <option value="Todos">Todos</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR CLASE -->
+<div id="modalEditClase" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Editar Clase</h3>
+            <button class="close-btn" onclick="closeModal('modalEditClase')">&times;</button>
+        </div>
+        <form id="formEditClase">
+            <input type="hidden" id="editClaseId">
+            <div class="form-group">
+                <label>Título *</label>
+                <input type="text" id="editClaseTitulo" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="editClaseDesc" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nivel *</label>
+                    <select id="editClaseNivel" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Orden</label>
+                    <input type="number" id="editClaseOrden" min="1">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>URL del Video *</label>
+                    <input type="text" id="editClaseVideo" required>
+                </div>
+                <div class="form-group">
+                    <label>URL Thumbnail</label>
+                    <input type="text" id="editClaseThumb">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR VIDEO SUELTO -->
+<div id="modalEditSuelto" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Editar Video Suelto</h3>
+            <button class="close-btn" onclick="closeModal('modalEditSuelto')">&times;</button>
+        </div>
+        <form id="formEditSuelto">
+            <input type="hidden" id="editSueltoId">
+            <div class="form-group">
+                <label>Título *</label>
+                <input type="text" id="editSueltoTitulo" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="editSueltoDesc" rows="3"></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="editSueltoCat">
+                        <option value="Salsa">Salsa</option>
+                        <option value="Bachata">Bachata</option>
+                        <option value="Musicalidad">Musicalidad</option>
+                        <option value="General">General</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duración</label>
+                    <input type="text" id="editSueltoDur" placeholder="5:30">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>URL del Video *</label>
+                <input type="text" id="editSueltoVideo" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
     </div>
 </div>
 
@@ -450,12 +600,10 @@
     const SUPABASE_URL = 'https://lhtfrzhwzphryjhgcqjw.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxodGZyemh3enBocnlqaGdjcWp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzOTU3NDksImV4cCI6MjA4Njk3MTc0OX0.1HSklzboeOSAnCip3V39LcYZIJWLMZzgWuCvy7qBl2I';
     
-    // ✅ Nombre diferente para evitar conflicto con el CDN
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     let users=[], niveles=[], clases=[], sueltos=[], access=[];
 
-    // Cargar datos al iniciar
     loadData();
 
     function showTab(name) {
@@ -521,7 +669,8 @@
                 <td>${u.name||'-'}</td>
                 <td>${u.phone||'-'}</td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}','${u.name}','${u.access_code||''}')">🔑 Accesos</button>
+                    <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}','${u.name}','${u.access_code||''}')"> Accesos</button>
+                    <button class="btn btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
                     <button class="btn btn-sm btn-danger" onclick="del('users','${u.id}')">🗑️</button>
                 </td>
             </tr>
@@ -534,7 +683,10 @@
                 <td>${n.nombre||n.name||'-'}</td>
                 <td>${n.tipo_baile||n.dance_type||'-'}</td>
                 <td>${n.nivel||'-'}</td>
-                <td><button class="btn btn-sm btn-danger" onclick="del('niveles','${n.id}')">🗑️</button></td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editNivel('${n.id}')">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="del('niveles','${n.id}')">️</button>
+                </td>
             </tr>
         `).join('');
     }
@@ -545,7 +697,10 @@
                 <td>${c.titulo||'-'}</td>
                 <td>${c.niveles?.nombre||c.nivel_id?.substring(0,8)||'-'}</td>
                 <td>${c.video_url?.substring(0,30)||'-'}...</td>
-                <td><button class="btn btn-sm btn-danger" onclick="del('clases','${c.id}')">🗑️</button></td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editClase('${c.id}')">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="del('clases','${c.id}')">🗑️</button>
+                </td>
             </tr>
         `).join('');
     }
@@ -556,17 +711,134 @@
                 <td>${s.titulo||'-'}</td>
                 <td>${s.categoria||'-'}</td>
                 <td>${s.video_url?.substring(0,30)||'-'}...</td>
-                <td><button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">🗑️</button></td>
+                <td>
+                    <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">🗑️</button>
+                </td>
             </tr>
         `).join('');
     }
 
     function loadNivelesSelect() {
         const sel = document.getElementById('claseNivel');
-        sel.innerHTML = niveles.map(n => `<option value="${n.id}">${n.nombre||n.name} (${n.tipo_baile||n.dance_type})</option>`).join('');
+        const editSel = document.getElementById('editClaseNivel');
+        const html = niveles.map(n => `<option value="${n.id}">${n.nombre||n.name} (${n.tipo_baile||n.dance_type})</option>`).join('');
+        if (sel) sel.innerHTML = html;
+        if (editSel) editSel.innerHTML = html;
     }
 
-    // FORM: NUEVO USUARIO
+    // ========== EDITAR ==========
+    
+    // Editar Usuario
+    function editUser(id) {
+        const user = users.find(u => u.id === id);
+        if (!user) return;
+        document.getElementById('editUserId').value = user.id;
+        document.getElementById('editUserCode').value = user.access_code || '-';
+        document.getElementById('editUserName').value = user.name || '';
+        document.getElementById('editUserPhone').value = user.phone || '';
+        openModal('modalEditUser');
+    }
+
+    document.getElementById('formEditUser').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('editUserId').value;
+        const name = document.getElementById('editUserName').value.trim();
+        const phone = document.getElementById('editUserPhone').value.trim();
+        
+        const { error } = await supabaseClient.from('users').update({ name, phone }).eq('id', id);
+        if (error) { alert('Error: ' + error.message); return; }
+        closeModal('modalEditUser');
+        loadData();
+    });
+
+    // Editar Nivel
+    function editNivel(id) {
+        const nivel = niveles.find(n => n.id === id);
+        if (!nivel) return;
+        document.getElementById('editNivelId').value = nivel.id;
+        document.getElementById('editNivelNombre').value = nivel.nombre || nivel.name || '';
+        document.getElementById('editNivelTipo').value = nivel.tipo_baile || nivel.dance_type || 'Salsa';
+        document.getElementById('editNivelNivel').value = nivel.nivel || 'Principiante';
+        openModal('modalEditNivel');
+    }
+
+    document.getElementById('formEditNivel').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('editNivelId').value;
+        const { error } = await supabaseClient.from('niveles').update({
+            nombre: document.getElementById('editNivelNombre').value,
+            tipo_baile: document.getElementById('editNivelTipo').value,
+            nivel: document.getElementById('editNivelNivel').value
+        }).eq('id', id);
+        if (error) { alert('Error: ' + error.message); return; }
+        closeModal('modalEditNivel');
+        loadData();
+    });
+
+    // Editar Clase
+    function editClase(id) {
+        const clase = clases.find(c => c.id === id);
+        if (!clase) return;
+        document.getElementById('editClaseId').value = clase.id;
+        document.getElementById('editClaseTitulo').value = clase.titulo || '';
+        document.getElementById('editClaseDesc').value = clase.descripcion || '';
+        document.getElementById('editClaseOrden').value = clase.orden || 1;
+        document.getElementById('editClaseVideo').value = clase.video_url || '';
+        document.getElementById('editClaseThumb').value = clase.thumbnail_url || '';
+        loadNivelesSelect();
+        setTimeout(() => {
+            document.getElementById('editClaseNivel').value = clase.nivel_id || '';
+        }, 100);
+        openModal('modalEditClase');
+    }
+
+    document.getElementById('formEditClase').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('editClaseId').value;
+        const { error } = await supabaseClient.from('clases').update({
+            titulo: document.getElementById('editClaseTitulo').value,
+            descripcion: document.getElementById('editClaseDesc').value,
+            nivel_id: document.getElementById('editClaseNivel').value,
+            video_url: document.getElementById('editClaseVideo').value,
+            thumbnail_url: document.getElementById('editClaseThumb').value,
+            orden: parseInt(document.getElementById('editClaseOrden').value) || 1
+        }).eq('id', id);
+        if (error) { alert('Error: ' + error.message); return; }
+        closeModal('modalEditClase');
+        loadData();
+    });
+
+    // Editar Video Suelto
+    function editSuelto(id) {
+        const suelto = sueltos.find(s => s.id === id);
+        if (!suelto) return;
+        document.getElementById('editSueltoId').value = suelto.id;
+        document.getElementById('editSueltoTitulo').value = suelto.titulo || '';
+        document.getElementById('editSueltoDesc').value = suelto.descripcion || '';
+        document.getElementById('editSueltoCat').value = suelto.categoria || 'General';
+        document.getElementById('editSueltoDur').value = suelto.duracion || '';
+        document.getElementById('editSueltoVideo').value = suelto.video_url || '';
+        openModal('modalEditSuelto');
+    }
+
+    document.getElementById('formEditSuelto').addEventListener('submit', async e => {
+        e.preventDefault();
+        const id = document.getElementById('editSueltoId').value;
+        const { error } = await supabaseClient.from('videos_sueltos').update({
+            titulo: document.getElementById('editSueltoTitulo').value,
+            descripcion: document.getElementById('editSueltoDesc').value,
+            categoria: document.getElementById('editSueltoCat').value,
+            duracion: document.getElementById('editSueltoDur').value,
+            video_url: document.getElementById('editSueltoVideo').value
+        }).eq('id', id);
+        if (error) { alert('Error: ' + error.message); return; }
+        closeModal('modalEditSuelto');
+        loadData();
+    });
+
+    // ========== FORMULARIOS NUEVOS ==========
+    
     document.getElementById('newUserForm').addEventListener('submit', async e => {
         e.preventDefault();
         const name = document.getElementById('newUserName').value.trim();
@@ -574,7 +846,6 @@
         
         if (!name || !phone) return;
 
-        // Generar código único
         let code, exists = true;
         while (exists) {
             code = 'SM' + Math.floor(10000 + Math.random() * 90000);
@@ -592,7 +863,6 @@
         }
     });
 
-    // FORM: NUEVO NIVEL
     document.getElementById('formNivel').addEventListener('submit', async e => {
         e.preventDefault();
         const { error } = await supabaseClient.from('niveles').insert([{
@@ -606,7 +876,6 @@
         loadData();
     });
 
-    // FORM: NUEVA CLASE
     document.getElementById('formClase').addEventListener('submit', async e => {
         e.preventDefault();
         const { error } = await supabaseClient.from('clases').insert([{
@@ -623,7 +892,6 @@
         loadData();
     });
 
-    // FORM: NUEVO VIDEO SUELTO
     document.getElementById('formSuelto').addEventListener('submit', async e => {
         e.preventDefault();
         const { error } = await supabaseClient.from('videos_sueltos').insert([{
@@ -683,7 +951,6 @@
         if (u) manageAccess(uid, u.name, u.access_code);
     }
 
-    // ELIMINAR
     async function del(table, id) {
         if (!confirm('¿Eliminar este registro?')) return;
         const { error } = await supabaseClient.from(table).delete().eq('id', id);
@@ -691,7 +958,6 @@
         loadData();
     }
 
-    // Cerrar modales al hacer clic fuera
     document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
         if (e.target === m) m.classList.remove('active');
     }));
