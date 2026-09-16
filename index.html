@@ -126,29 +126,30 @@
         .message.success { background: #064e3b; color: #6ee7b7; }
         .message.error { background: #7f1d1d; color: #fca5a5; }
         
-        /* Jerarquía */
+        /* Jerarquía mejorada */
         .categoria-block {
             background: #222;
-            border: 1px solid #444;
+            border: 2px solid #444;
             border-radius: 8px;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
         .categoria-header {
             background: linear-gradient(90deg, #f59e0b, #dc2626);
-            padding: 1rem 1.5rem;
+            padding: 1.2rem 1.5rem;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .categoria-header h3 { color: white; }
-        .categoria-body { padding: 1rem; }
+        .categoria-header h3 { color: white; font-size: 1.3rem; }
+        .categoria-body { padding: 1.5rem; }
         
-        .nivel-block {
+        .nivel-item {
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 6px;
             margin-bottom: 0.75rem;
+            overflow: hidden;
         }
         .nivel-header {
             background: #2a2a2a;
@@ -159,7 +160,7 @@
             align-items: center;
         }
         .nivel-header h4 { color: #f59e0b; }
-        .nivel-body { padding: 1rem; }
+        .nivel-body { padding: 1rem; background: #151515; }
         
         .video-item {
             display: flex;
@@ -169,53 +170,66 @@
             background: #222;
             border-radius: 6px;
             margin-bottom: 0.5rem;
+            border-left: 3px solid #f59e0b;
         }
         .video-item-info { flex: 1; }
-        .video-item-info strong { color: white; }
-        .video-item-info small { color: #999; }
+        .video-item-info strong { color: white; display: block; margin-bottom: 0.25rem; }
+        .video-item-info small { color: #999; font-size: 0.85rem; }
         .video-item-actions { display: flex; gap: 0.5rem; }
         
         .add-video-btn {
             background: #10b981;
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1rem;
             border-radius: 6px;
             cursor: pointer;
             margin-top: 0.5rem;
+            font-weight: 600;
         }
         .add-video-btn:hover { background: #059669; }
         
-        /* Accesos por categoría */
+        /* Accesos */
         .categoria-acceso {
             background: #2a2a2a;
             border: 2px solid #444;
             border-radius: 8px;
-            padding: 1rem;
+            padding: 1.2rem;
             margin-bottom: 1rem;
         }
         .categoria-acceso.has-access {
             border-color: #10b981;
             background: #064e3b;
         }
-        .categoria-acceso h4 { color: #f59e0b; margin-bottom: 0.75rem; }
+        .categoria-acceso h4 { color: #f59e0b; margin-bottom: 1rem; font-size: 1.2rem; }
         .categoria-acceso.has-access h4 { color: #6ee7b7; }
-        .niveles-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        .nivel-check {
+        .niveles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+        .nivel-checkbox {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0.5rem;
+            padding: 0.6rem;
             background: #222;
             border-radius: 6px;
             cursor: pointer;
+            transition: all 0.2s;
         }
-        .nivel-check.has-access {
-            background: #064e3b;
-            border: 1px solid #10b981;
+        .nivel-checkbox:hover { background: #333; }
+        .nivel-checkbox input[type="checkbox"] {
+            margin-right: 0.75rem;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
-        .nivel-check label { cursor: pointer; flex: 1; }
-        .nivel-check .count { color: #f59e0b; font-size: 0.85rem; }
+        .nivel-checkbox label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.9rem;
+        }
+        .nivel-checkbox .count {
+            color: #f59e0b;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
         
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
@@ -240,7 +254,7 @@
 
     <div class="tabs">
         <button class="tab active" onclick="showTab('usuarios')">👥 Usuarios</button>
-        <button class="tab" onclick="showTab('contenido')">📚 Contenido</button>
+        <button class="tab" onclick="showTab('contenido')">📚 Contenido por Categoría</button>
         <button class="tab" onclick="showTab('sueltos')"> Videos Sueltos</button>
         <button class="tab" onclick="showTab('nuevo')">➕ Nuevo Usuario</button>
     </div>
@@ -259,7 +273,8 @@
     <!-- CONTENIDO -->
     <div id="tab-contenido" class="tab-content" style="display:none;">
         <div class="section">
-            <h3>Contenido por Categoría</h3>
+            <h3>Contenido Organizado por Categoría</h3>
+            <p style="color:#999; margin-bottom:1rem;">Clic en una categoría para ver sus niveles. Clic en un nivel para ver sus videos.</p>
             <div id="contenidoJerarquico"></div>
         </div>
     </div>
@@ -291,7 +306,7 @@
     </div>
 </div>
 
-<!-- MODAL: ACCESOS POR CATEGORÍA -->
+<!-- MODAL: ACCESOS -->
 <div id="modalAccesos" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -299,9 +314,11 @@
             <button class="close-btn" onclick="closeModal('modalAccesos')">&times;</button>
         </div>
         <div id="accesosInfo" style="margin-bottom:1rem; padding:1rem; background:#2a2a2a; border-radius:8px;"></div>
-        <h4 style="color:#f59e0b; margin-bottom:0.5rem;">Categorías y Niveles</h4>
-        <p style="color:#999; font-size:0.9rem; margin-bottom:1rem;">Selecciona los niveles a los que tendrá acceso el usuario</p>
+        <h4 style="color:#f59e0b; margin-bottom:0.5rem;">Selecciona los niveles con acceso</h4>
         <div id="accesosPorCategoria"></div>
+        <div style="margin-top:1rem; text-align:right;">
+            <button class="btn btn-primary" onclick="saveAllAccess()">Guardar Todos los Cambios</button>
+        </div>
     </div>
 </div>
 
@@ -352,7 +369,6 @@
             <button class="close-btn" onclick="closeModal('modalSuelto')">&times;</button>
         </div>
         <form id="formSuelto">
-            <input type="hidden" id="sueltoId">
             <div class="form-group"><label>Título</label><input type="text" id="sueltoTitulo" required></div>
             <div class="form-group"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
             <div class="form-row">
@@ -372,6 +388,8 @@
     
     const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let users=[], niveles=[], clases=[], sueltos=[], access=[];
+    let currentUserAccessing = null;
+    let pendingAccess = {};
 
     loadData();
 
@@ -428,7 +446,7 @@
                 <td>${u.phone||'-'}</td>
                 <td><span style="color:${count>0?'#10b981':'#999'}">${count} nivel${count!==1?'es':''}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')">🔑 Accesos</button>
+                    <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')"> Accesos</button>
                     <button class="btn btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
                     <button class="btn btn-sm btn-danger" onclick="del('users','${u.id}')">🗑️</button>
                 </td>
@@ -437,6 +455,7 @@
     }
 
     function renderContenido() {
+        // Agrupar por categoría (tipo_baile)
         const categorias = {};
         niveles.forEach(n => {
             const cat = n.tipo_baile || n.dance_type || 'General';
@@ -461,16 +480,16 @@
                 const nombre = nivel.nombre || nivel.name || 'Sin nombre';
                 const dif = nivel.nivel || 'Todos';
                 
-                html += `<div class="nivel-block">
+                html += `<div class="nivel-item">
                     <div class="nivel-header" onclick="toggleNivel('nivel-${nivel.id}')">
-                        <h4>📊 ${nombre} (${dif})</h4>
-                        <span>${nivelClases.length} videos</span>
+                        <h4>📊 ${nombre} <small style="color:#999;font-weight:normal">(${dif})</small></h4>
+                        <span>${nivelClases.length} video${nivelClases.length!==1?'s':''}</span>
                     </div>
                     <div class="nivel-body" id="nivel-${nivel.id}" style="display:none;">
                         ${nivelClases.length ? nivelClases.map(v => `
                             <div class="video-item">
                                 <div class="video-item-info">
-                                    <strong>${v.titulo||'Sin título'}</strong><br>
+                                    <strong>${v.titulo||'Sin título'}</strong>
                                     <small>${v.video_url?.substring(0,60)||'-'}...</small>
                                 </div>
                                 <div class="video-item-actions">
@@ -478,15 +497,15 @@
                                     <button class="btn btn-sm btn-danger" onclick="delVideo('${v.id}')">🗑️</button>
                                 </div>
                             </div>
-                        `).join('') : '<p style="color:#999;text-align:center;">Sin videos</p>'}
-                        <button class="add-video-btn" onclick="addVideo('${nivel.id}')">+ Agregar Video</button>
+                        `).join('') : '<p style="color:#999;text-align:center;padding:1rem;">Sin videos en este nivel</p>'}
+                        <button class="add-video-btn" onclick="addVideo('${nivel.id}')">+ Agregar Video a este nivel</button>
                     </div>
                 </div>`;
             });
             html += `</div></div>`;
         });
 
-        document.getElementById('contenidoJerarquico').innerHTML = html || '<p style="color:#999;text-align:center;">Sin contenido</p>';
+        document.getElementById('contenidoJerarquico').innerHTML = html || '<p style="color:#999;text-align:center;padding:2rem;">No hay niveles creados</p>';
     }
 
     function toggleCat(id) {
@@ -504,8 +523,8 @@
                 <td>${s.titulo||'-'}</td>
                 <td>${s.video_url?.substring(0,40)||'-'}...</td>
                 <td>
-                    <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">️</button>
+                    <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">️</button>
+                    <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">🗑️</button>
                 </td>
             </tr>
         `).join('');
@@ -651,14 +670,17 @@
         }
     });
 
-    // ========== ACCESOS POR CATEGORÍA/NIVEL ==========
+    // ========== ACCESOS - NUEVA LÓGICA ==========
     async function manageAccess(uid) {
         const u = users.find(x => x.id === uid);
         if (!u) return;
+        currentUserAccessing = uid;
+        pendingAccess = {};
+        
         document.getElementById('accesosTitle').textContent = `Accesos: ${u.name}`;
         document.getElementById('accesosInfo').innerHTML = `
             <p><strong>Código:</strong> ${u.access_code}</p>
-            <p style="color:#f59e0b;margin-top:0.5rem">Marca los niveles a los que tendrá acceso</p>
+            <p style="color:#f59e0b;margin-top:0.5rem">Marca/desmarca los niveles y luego clic en "Guardar"</p>
         `;
         
         const userAccess = access.filter(a => a.user_id === uid).map(a => a.nivel_id);
@@ -676,7 +698,7 @@
             const nivelesCat = categorias[cat];
             html += `<div class="categoria-acceso">
                 <h4>🎯 ${cat}</h4>
-                <div class="niveles-list">`;
+                <div class="niveles-grid">`;
             
             nivelesCat.forEach(nivel => {
                 const hasAccess = userAccess.includes(nivel.id);
@@ -684,11 +706,13 @@
                 const dif = nivel.nivel || 'Todos';
                 const count = clases.filter(c => c.nivel_id === nivel.id).length;
                 
-                html += `<div class="nivel-check ${hasAccess?'has-access':''}" onclick="toggleNivelAccess('${uid}','${nivel.id}',${hasAccess})">
-                    <label>
-                        <strong>${nombre}</strong> <small style="color:#999">(${dif})</small>
+                html += `<div class="nivel-checkbox">
+                    <input type="checkbox" id="access-${nivel.id}" ${hasAccess?'checked':''} 
+                           onchange="togglePendingAccess('${nivel.id}', this.checked)">
+                    <label for="access-${nivel.id}">
+                        <strong>${nombre}</strong>
+                        <span class="count">${count} videos</span>
                     </label>
-                    <span class="count">${count} videos</span>
                 </div>`;
             });
             
@@ -699,15 +723,49 @@
         openModal('modalAccesos');
     }
 
-    async function toggleNivelAccess(uid, nivelId, hasAccess) {
-        if (hasAccess) {
-            if (!confirm('¿Quitar acceso a este nivel?')) return;
-            await db.from('user_access').delete().eq('user_id', uid).eq('nivel_id', nivelId);
-        } else {
-            await db.from('user_access').insert([{user_id: uid, nivel_id: nivelId}]);
+    function togglePendingAccess(nivelId, checked) {
+        pendingAccess[nivelId] = checked;
+    }
+
+    async function saveAllAccess() {
+        if (!currentUserAccessing) return;
+        
+        const userAccess = access.filter(a => a.user_id === currentUserAccessing).map(a => a.nivel_id);
+        
+        // Calcular cambios
+        const toAdd = [];
+        const toRemove = [];
+        
+        Object.keys(pendingAccess).forEach(nivelId => {
+            if (pendingAccess[nivelId] && !userAccess.includes(nivelId)) {
+                toAdd.push(nivelId);
+            } else if (!pendingAccess[nivelId] && userAccess.includes(nivelId)) {
+                toRemove.push(nivelId);
+            }
+        });
+        
+        // Ejecutar cambios
+        let error = null;
+        if (toAdd.length > 0) {
+            const inserts = toAdd.map(nivelId => ({ user_id: currentUserAccessing, nivel_id: nivelId }));
+            const r = await db.from('user_access').insert(inserts);
+            if (r.error) error = r.error;
         }
-        loadData();
-        manageAccess(uid);
+        
+        if (toRemove.length > 0 && !error) {
+            for (const nivelId of toRemove) {
+                const r = await db.from('user_access').delete().eq('user_id', currentUserAccessing).eq('nivel_id', nivelId);
+                if (r.error) { error = r.error; break; }
+            }
+        }
+        
+        if (error) {
+            alert('Error al guardar: ' + error.message);
+        } else {
+            alert(`✅ Accesos actualizados\nAgregados: ${toAdd.length}\nRemovidos: ${toRemove.length}`);
+            closeModal('modalAccesos');
+            loadData();
+        }
     }
 
     async function del(table, id) {
