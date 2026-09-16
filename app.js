@@ -32,7 +32,7 @@ function showMsg(id, text, type) {
     setTimeout(() => el.style.display = 'none', 3000);
 }
 
-// CARGAR DATOS
+// CARGAR DATOS (actualizada)
 async function loadData() {
     try {
         const [u, cat, n, c, s, a] = await Promise.all([
@@ -58,6 +58,12 @@ async function loadData() {
 
         renderUsers();
         renderSueltos();
+        
+        // ✅ REFRESCAR CONTENIDO SI ESTAMOS EN ESA PESTAÑA
+        const tabContenido = document.getElementById('tab-contenido');
+        if (tabContenido && tabContenido.style.display !== 'none') {
+            renderContenido();
+        }
     } catch (err) { console.error('Error:', err); }
 }
 
@@ -127,8 +133,6 @@ function renderContenido() {
     
     categorias.forEach(cat => {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
-        if (nivelesCat.length === 0) return;
-
         const totalClases = nivelesCat.reduce((sum, n) => sum + clases.filter(c => c.nivel_id === n.id).length, 0);
         
         html += `<div class="categoria-block">
