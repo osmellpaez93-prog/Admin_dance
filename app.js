@@ -12,7 +12,7 @@ let pendingAccess = {};
 // INICIALIZACIÓN
 loadData();
 
-// FUNCIONES DE NAVEGACIÓN
+// NAVEGACIÓN
 function showTab(name) {
     document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -61,7 +61,7 @@ async function loadData() {
     } catch (err) { console.error('Error:', err); }
 }
 
-// RENDER USUARIOS
+// ========== USUARIOS ==========
 function renderUsers() {
     document.getElementById('usersTable').innerHTML = users.map(u => {
         const count = access.filter(a => a.user_id === u.id).length;
@@ -71,7 +71,7 @@ function renderUsers() {
             <td>${u.phone||'-'}</td>
             <td><span style="color:${count>0?'#10b981':'#999'}">${count} nivel${count!==1?'es':''}</span></td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')"> Accesos</button>
+                <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')">🔑 Accesos</button>
                 <button class="btn btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
                 <button class="btn btn-sm btn-danger" onclick="del('users','${u.id}')">🗑️</button>
             </td>
@@ -79,78 +79,6 @@ function renderUsers() {
     }).join('');
 }
 
-// RENDER CONTENIDO JERÁRQUICO
-function renderContenido() {
-    let html = '';
-    
-    categorias.forEach(cat => {
-        const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
-        if (nivelesCat.length === 0) return; // Saltar categorías vacías
-
-        const totalClases = nivelesCat.reduce((sum, n) => sum + clases.filter(c => c.nivel_id === n.id).length, 0);
-        
-        html += `<div class="categoria-block">
-            <div class="categoria-header" onclick="toggleCat('cat-${cat.id}')">
-                <h3>🎯 ${cat.nombre}</h3>
-                <span>${nivelesCat.length} niveles • ${totalClases} clases</span>
-            </div>
-            <div class="categoria-body" id="cat-${cat.id}" style="display:none;">`;
-        
-        nivelesCat.forEach(nivel => {
-            const nivelClases = clases.filter(c => c.nivel_id === nivel.id).sort((a,b) => (a.orden||1) - (b.orden||1));
-            
-            html += `<div class="nivel-item">
-                <div class="nivel-header" onclick="toggleNivel('nivel-${nivel.id}')">
-                    <h4>📊 ${nivel.nombre}</h4>
-                    <span>${nivelClases.length} videos</span>
-                </div>
-                <div class="nivel-body" id="nivel-${nivel.id}" style="display:none;">
-                    ${nivelClases.length ? nivelClases.map(v => `
-                        <div class="video-item">
-                            <div class="video-item-info">
-                                <strong>${v.titulo||'Sin título'}</strong>
-                                <small>${v.video_url?.substring(0,60)||'-'}...</small>
-                            </div>
-                            <div class="video-item-actions">
-                                <button class="btn btn-sm btn-warning" onclick="editVideo('${v.id}')">✏️</button>
-                                <button class="btn btn-sm btn-danger" onclick="delVideo('${v.id}')">️</button>
-                            </div>
-                        </div>
-                    `).join('') : '<p style="color:#999;text-align:center;">Sin videos</p>'}
-                    <button class="add-video-btn" onclick="addVideo('${nivel.id}')">+ Agregar Video</button>
-                </div>
-            </div>`;
-        });
-        html += `</div></div>`;
-    });
-
-    document.getElementById('contenidoJerarquico').innerHTML = html || '<p style="color:#999;text-align:center;">Sin contenido</p>';
-}
-
-function toggleCat(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-function toggleNivel(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-// RENDER SUELTOS
-function renderSueltos() {
-    document.getElementById('sueltosTable').innerHTML = sueltos.map(s => `
-        <tr>
-            <td>${s.titulo||'-'}</td>
-            <td>${s.video_url?.substring(0,40)||'-'}...</td>
-            <td>
-                <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
-                <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">️</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// EDITAR USUARIO
 function editUser(id) {
     const u = users.find(x => x.id === id);
     if (!u) return;
@@ -171,7 +99,197 @@ document.getElementById('formEditUser').addEventListener('submit', async e => {
     else { closeModal('modalEditUser'); loadData(); }
 });
 
-// GESTIÓN DE VIDEOS POR NIVEL
+document.getElementById('newUserForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = document.getElementById('newUserName').value.trim();
+    const phone = document.getElementById('newUserPhone').value.trim();
+    if (!name || !phone) return;
+
+    let code, exists = true;
+    while (exists) {
+        code = 'SM' + Math.floor(10000 + Math.random() * 90000);
+        const {data} = await db.from('users').select('id').eq('access_code', code).single();
+        if (!data) exists = false;
+    }
+
+    const {error} = await db.from('users').insert([{name, phone, access_code: code}]);
+    if (error) showMsg('newUserMsg', error.message, 'error');
+    else {
+        showMsg('newUserMsg', `✅ Código: ${code}`, 'success');
+        document.getElementById('newUserForm').reset();
+        loadData();
+    }
+});
+
+// ========== CONTENIDO JERÁRQUICO ==========
+function renderContenido() {
+    let html = '';
+    
+    categorias.forEach(cat => {
+        const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
+        if (nivelesCat.length === 0) return;
+
+        const totalClases = nivelesCat.reduce((sum, n) => sum + clases.filter(c => c.nivel_id === n.id).length, 0);
+        
+        html += `<div class="categoria-block">
+            <div class="categoria-header" onclick="toggleCat('cat-${cat.id}')">
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <h3> ${cat.nombre}</h3>
+                    <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); editCategoria('${cat.id}')" title="Editar">✏️</button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); delCategoria('${cat.id}')" title="Eliminar">️</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span style="color:white;">${nivelesCat.length} niveles • ${totalClases} clases</span>
+                    <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); openModalNivel('${cat.id}')" title="Agregar Nivel">+ Nivel</button>
+                </div>
+            </div>
+            <div class="categoria-body" id="cat-${cat.id}" style="display:none;">`;
+        
+        nivelesCat.forEach(nivel => {
+            const nivelClases = clases.filter(c => c.nivel_id === nivel.id).sort((a,b) => (a.orden||1) - (b.orden||1));
+            
+            html += `<div class="nivel-item">
+                <div class="nivel-header" onclick="toggleNivel('nivel-${nivel.id}')">
+                    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                        <h4>📊 ${nivel.nombre}</h4>
+                        <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); editNivel('${nivel.id}')" title="Editar">✏️</button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); delNivel('${nivel.id}')" title="Eliminar">🗑️</button>
+                    </div>
+                    <span>${nivelClases.length} videos</span>
+                </div>
+                <div class="nivel-body" id="nivel-${nivel.id}" style="display:none;">
+                    ${nivelClases.length ? nivelClases.map(v => `
+                        <div class="video-item">
+                            <div class="video-item-info">
+                                <strong>${v.titulo||'Sin título'}</strong>
+                                <small>${v.video_url?.substring(0,60)||'-'}...</small>
+                            </div>
+                            <div class="video-item-actions">
+                                <button class="btn btn-sm btn-warning" onclick="editVideo('${v.id}')">✏️</button>
+                                <button class="btn btn-sm btn-danger" onclick="delVideo('${v.id}')">🗑️</button>
+                            </div>
+                        </div>
+                    `).join('') : '<p style="color:#999;text-align:center;padding:1rem;">Sin videos en este nivel</p>'}
+                    <button class="add-video-btn" onclick="addVideo('${nivel.id}')">+ Agregar Video a este nivel</button>
+                </div>
+            </div>`;
+        });
+        html += `</div></div>`;
+    });
+
+    document.getElementById('contenidoJerarquico').innerHTML = html || '<p style="color:#999;text-align:center;padding:2rem;">No hay categorías. Clic en "+ Nueva Categoría" para comenzar.</p>';
+}
+
+function toggleCat(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function toggleNivel(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ========== CATEGORÍAS ==========
+function openModalCategoria() {
+    document.getElementById('categoriaModalTitle').textContent = 'Nueva Categoría';
+    document.getElementById('categoriaId').value = '';
+    document.getElementById('categoriaNombre').value = '';
+    document.getElementById('categoriaDesc').value = '';
+    openModal('modalCategoria');
+}
+
+function editCategoria(id) {
+    const cat = categorias.find(c => c.id === id);
+    if (!cat) return;
+    document.getElementById('categoriaModalTitle').textContent = 'Editar Categoría';
+    document.getElementById('categoriaId').value = cat.id;
+    document.getElementById('categoriaNombre').value = cat.nombre || '';
+    document.getElementById('categoriaDesc').value = cat.descripcion || '';
+    openModal('modalCategoria');
+}
+
+document.getElementById('formCategoria').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('categoriaId').value;
+    const data = {
+        nombre: document.getElementById('categoriaNombre').value.trim(),
+        descripcion: document.getElementById('categoriaDesc').value.trim()
+    };
+    
+    let error;
+    if (id) {
+        const r = await db.from('categorias').update(data).eq('id', id);
+        error = r.error;
+    } else {
+        const r = await db.from('categorias').insert([data]);
+        error = r.error;
+    }
+    
+    if (error) alert('Error: ' + error.message);
+    else { closeModal('modalCategoria'); loadData(); }
+});
+
+async function delCategoria(id) {
+    if (!confirm('¿Eliminar esta categoría? Se eliminarán también todos sus niveles y clases.')) return;
+    const { error } = await db.from('categorias').delete().eq('id', id);
+    if (error) alert('Error: ' + error.message);
+    else loadData();
+}
+
+// ========== NIVELES ==========
+function openModalNivel(categoriaId) {
+    document.getElementById('nivelModalTitle').textContent = 'Nuevo Nivel';
+    document.getElementById('nivelId').value = '';
+    document.getElementById('nivelCategoriaId').value = categoriaId;
+    document.getElementById('nivelNombre').value = '';
+    document.getElementById('nivelDesc').value = '';
+    document.getElementById('nivelOrden').value = '1';
+    openModal('modalNivel');
+}
+
+function editNivel(id) {
+    const nivel = niveles.find(n => n.id === id);
+    if (!nivel) return;
+    document.getElementById('nivelModalTitle').textContent = 'Editar Nivel';
+    document.getElementById('nivelId').value = nivel.id;
+    document.getElementById('nivelCategoriaId').value = nivel.categoria_id || '';
+    document.getElementById('nivelNombre').value = nivel.nombre || '';
+    document.getElementById('nivelDesc').value = nivel.descripcion || '';
+    document.getElementById('nivelOrden').value = nivel.orden || 1;
+    openModal('modalNivel');
+}
+
+document.getElementById('formNivel').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('nivelId').value;
+    const data = {
+        nombre: document.getElementById('nivelNombre').value.trim(),
+        descripcion: document.getElementById('nivelDesc').value.trim(),
+        categoria_id: document.getElementById('nivelCategoriaId').value,
+        orden: parseInt(document.getElementById('nivelOrden').value) || 1
+    };
+    
+    let error;
+    if (id) {
+        const r = await db.from('niveles').update(data).eq('id', id);
+        error = r.error;
+    } else {
+        const r = await db.from('niveles').insert([data]);
+        error = r.error;
+    }
+    
+    if (error) alert('Error: ' + error.message);
+    else { closeModal('modalNivel'); loadData(); }
+});
+
+async function delNivel(id) {
+    if (!confirm('¿Eliminar este nivel? Se eliminarán también todas sus clases.')) return;
+    const { error } = await db.from('niveles').delete().eq('id', id);
+    if (error) alert('Error: ' + error.message);
+    else loadData();
+}
+
+// ========== VIDEOS POR NIVEL ==========
 function addVideo(nivelId) {
     document.getElementById('videoModalTitle').textContent = 'Agregar Video';
     document.getElementById('videoId').value = '';
@@ -230,10 +348,35 @@ async function delVideo(id) {
     else loadData();
 }
 
-// VIDEOS SUELTOS
+// ========== VIDEOS SUELTOS ==========
+function renderSueltos() {
+    document.getElementById('sueltosTable').innerHTML = sueltos.map(s => `
+        <tr>
+            <td>${s.titulo||'-'}</td>
+            <td>${s.video_url?.substring(0,40)||'-'}...</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openModalSuelto() {
+    document.getElementById('sueltoModalTitle').textContent = 'Nuevo Video Suelto';
+    document.getElementById('sueltoId').value = '';
+    document.getElementById('sueltoTitulo').value = '';
+    document.getElementById('sueltoDesc').value = '';
+    document.getElementById('sueltoVideo').value = '';
+    document.getElementById('sueltoThumb').value = '';
+    document.getElementById('sueltoOrden').value = '1';
+    openModal('modalSuelto');
+}
+
 function editSuelto(id) {
     const s = sueltos.find(x => x.id === id);
     if (!s) return;
+    document.getElementById('sueltoModalTitle').textContent = 'Editar Video Suelto';
     document.getElementById('sueltoId').value = s.id;
     document.getElementById('sueltoTitulo').value = s.titulo || '';
     document.getElementById('sueltoDesc').value = s.descripcion || '';
@@ -267,30 +410,7 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
     else { closeModal('modalSuelto'); document.getElementById('formSuelto').reset(); loadData(); }
 });
 
-// NUEVO USUARIO
-document.getElementById('newUserForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const name = document.getElementById('newUserName').value.trim();
-    const phone = document.getElementById('newUserPhone').value.trim();
-    if (!name || !phone) return;
-
-    let code, exists = true;
-    while (exists) {
-        code = 'SM' + Math.floor(10000 + Math.random() * 90000);
-        const {data} = await db.from('users').select('id').eq('access_code', code).single();
-        if (!data) exists = false;
-    }
-
-    const {error} = await db.from('users').insert([{name, phone, access_code: code}]);
-    if (error) showMsg('newUserMsg', error.message, 'error');
-    else {
-        showMsg('newUserMsg', `✅ Código: ${code}`, 'success');
-        document.getElementById('newUserForm').reset();
-        loadData();
-    }
-});
-
-// GESTIÓN DE ACCESOS
+// ========== ACCESOS ==========
 async function manageAccess(uid) {
     const u = users.find(x => x.id === uid);
     if (!u) return;
@@ -378,7 +498,7 @@ async function saveAllAccess() {
     }
 }
 
-// ELIMINAR
+// ========== ELIMINAR GENÉRICO ==========
 async function del(table, id) {
     if (!confirm('¿Eliminar?')) return;
     const { error } = await db.from(table).delete().eq('id', id);
@@ -386,7 +506,7 @@ async function del(table, id) {
     else loadData();
 }
 
-// CERRAR MODALES
+// CERRAR MODALES AL CLIC FUERA
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
     if (e.target === m) m.classList.remove('active');
 }));

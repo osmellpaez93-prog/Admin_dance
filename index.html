@@ -23,8 +23,8 @@
 
     <div class="tabs">
         <button class="tab active" onclick="showTab('usuarios')">👥 Usuarios</button>
-        <button class="tab" onclick="showTab('contenido')">📚 Contenido</button>
-        <button class="tab" onclick="showTab('sueltos')">🎥 Videos Sueltos</button>
+        <button class="tab" onclick="showTab('contenido')"> Contenido</button>
+        <button class="tab" onclick="showTab('sueltos')"> Videos Sueltos</button>
         <button class="tab" onclick="showTab('nuevo')">➕ Nuevo Usuario</button>
     </div>
 
@@ -42,7 +42,11 @@
     <!-- CONTENIDO -->
     <div id="tab-contenido" class="tab-content" style="display:none;">
         <div class="section">
-            <h3>Contenido por Categoría</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3>Contenido por Categoría</h3>
+                <button class="btn btn-success" onclick="openModalCategoria()">+ Nueva Categoría</button>
+            </div>
+            <p style="color:#999; margin-bottom:1rem;">Clic en una categoría para expandir. Desde aquí gestionas materias, niveles y videos.</p>
             <div id="contenidoJerarquico"></div>
         </div>
     </div>
@@ -50,7 +54,7 @@
     <!-- VIDEOS SUELTOS -->
     <div id="tab-sueltos" class="tab-content" style="display:none;">
         <div class="section">
-            <h3>Videos Sueltos <button class="btn btn-success btn-sm" onclick="openModal('modalSuelto')">+ Nuevo</button></h3>
+            <h3>Videos Sueltos <button class="btn btn-success btn-sm" onclick="openModalSuelto()">+ Nuevo</button></h3>
             <table>
                 <thead><tr><th>Título</th><th>URL</th><th>Acciones</th></tr></thead>
                 <tbody id="sueltosTable"></tbody>
@@ -74,21 +78,99 @@
     </div>
 </div>
 
-<!-- MODALES -->
-<div id="modalAccesos" class="modal">
+<!-- MODAL: CATEGORÍA -->
+<div id="modalCategoria" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="accesosTitle">Gestionar Accesos</h3>
-            <button class="close-btn" onclick="closeModal('modalAccesos')">&times;</button>
+            <h3 id="categoriaModalTitle">Nueva Categoría</h3>
+            <button class="close-btn" onclick="closeModal('modalCategoria')">&times;</button>
         </div>
-        <div id="accesosInfo"></div>
-        <div id="accesosPorCategoria"></div>
-        <div style="margin-top:1rem; text-align:right;">
-            <button class="btn btn-primary" onclick="saveAllAccess()">Guardar Cambios</button>
-        </div>
+        <form id="formCategoria">
+            <input type="hidden" id="categoriaId">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="categoriaNombre" placeholder="Ej: Salsa, Bachata, Kizomba..." required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="categoriaDesc" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Categoría</button>
+        </form>
     </div>
 </div>
 
+<!-- MODAL: NIVEL -->
+<div id="modalNivel" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="nivelModalTitle">Nuevo Nivel</h3>
+            <button class="close-btn" onclick="closeModal('modalNivel')">&times;</button>
+        </div>
+        <form id="formNivel">
+            <input type="hidden" id="nivelId">
+            <input type="hidden" id="nivelCategoriaId">
+            <div class="form-group">
+                <label>Nombre *</label>
+                <input type="text" id="nivelNombre" placeholder="Ej: Inicial, Intermedio, Avanzado..." required>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <textarea id="nivelDesc" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Orden</label>
+                <input type="number" id="nivelOrden" value="1" min="1">
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Nivel</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: VIDEO -->
+<div id="modalVideo" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="videoModalTitle">Video</h3>
+            <button class="close-btn" onclick="closeModal('modalVideo')">&times;</button>
+        </div>
+        <form id="formVideo">
+            <input type="hidden" id="videoId">
+            <input type="hidden" id="videoNivelId">
+            <div class="form-group"><label>Título *</label><input type="text" id="videoTitulo" required></div>
+            <div class="form-group"><label>Descripción</label><textarea id="videoDesc" rows="3"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>URL Video *</label><input type="text" id="videoUrl" required></div>
+                <div class="form-group"><label>URL Thumbnail</label><input type="text" id="videoThumb"></div>
+            </div>
+            <div class="form-group"><label>Orden</label><input type="number" id="videoOrden" value="1" min="1"></div>
+            <button type="submit" class="btn btn-primary">Guardar Video</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: VIDEO SUELTO -->
+<div id="modalSuelto" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="sueltoModalTitle">Video Suelto</h3>
+            <button class="close-btn" onclick="closeModal('modalSuelto')">&times;</button>
+        </div>
+        <form id="formSuelto">
+            <input type="hidden" id="sueltoId">
+            <div class="form-group"><label>Título *</label><input type="text" id="sueltoTitulo" required></div>
+            <div class="form-group"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
+            <div class="form-row">
+                <div class="form-group"><label>URL Video *</label><input type="text" id="sueltoVideo" required></div>
+                <div class="form-group"><label>URL Thumbnail</label><input type="text" id="sueltoThumb"></div>
+            </div>
+            <div class="form-group"><label>Orden</label><input type="number" id="sueltoOrden" value="1" min="1"></div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: EDITAR USUARIO -->
 <div id="modalEditUser" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -105,44 +187,19 @@
     </div>
 </div>
 
-<div id="modalVideo" class="modal">
+<!-- MODAL: ACCESOS -->
+<div id="modalAccesos" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="videoModalTitle">Video</h3>
-            <button class="close-btn" onclick="closeModal('modalVideo')">&times;</button>
+            <h3 id="accesosTitle">Gestionar Accesos</h3>
+            <button class="close-btn" onclick="closeModal('modalAccesos')">&times;</button>
         </div>
-        <form id="formVideo">
-            <input type="hidden" id="videoId">
-            <input type="hidden" id="videoNivelId">
-            <div class="form-group"><label>Título</label><input type="text" id="videoTitulo" required></div>
-            <div class="form-group"><label>Descripción</label><textarea id="videoDesc" rows="3"></textarea></div>
-            <div class="form-row">
-                <div class="form-group"><label>URL Video</label><input type="text" id="videoUrl" required></div>
-                <div class="form-group"><label>URL Thumbnail</label><input type="text" id="videoThumb"></div>
-            </div>
-            <div class="form-group"><label>Orden</label><input type="number" id="videoOrden" value="1" min="1"></div>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </form>
-    </div>
-</div>
-
-<div id="modalSuelto" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Video Suelto</h3>
-            <button class="close-btn" onclick="closeModal('modalSuelto')">&times;</button>
+        <div id="accesosInfo"></div>
+        <h4 style="color:#f59e0b; margin:1rem 0 0.5rem;">Selecciona los niveles con acceso</h4>
+        <div id="accesosPorCategoria"></div>
+        <div style="margin-top:1rem; text-align:right;">
+            <button class="btn btn-primary" onclick="saveAllAccess()">Guardar Cambios</button>
         </div>
-        <form id="formSuelto">
-            <input type="hidden" id="sueltoId">
-            <div class="form-group"><label>Título</label><input type="text" id="sueltoTitulo" required></div>
-            <div class="form-group"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
-            <div class="form-row">
-                <div class="form-group"><label>URL Video</label><input type="text" id="sueltoVideo" required></div>
-                <div class="form-group"><label>URL Thumbnail</label><input type="text" id="sueltoThumb"></div>
-            </div>
-            <div class="form-group"><label>Orden</label><input type="number" id="sueltoOrden" value="1" min="1"></div>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </form>
     </div>
 </div>
 
