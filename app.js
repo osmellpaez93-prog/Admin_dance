@@ -32,7 +32,7 @@ function showMsg(id, text, type) {
     setTimeout(() => el.style.display = 'none', 3000);
 }
 
-// CARGAR DATOS (actualizada)
+// CARGAR DATOS
 async function loadData() {
     try {
         const [u, cat, n, c, s, a] = await Promise.all([
@@ -59,12 +59,14 @@ async function loadData() {
         renderUsers();
         renderSueltos();
         
-        // ✅ REFRESCAR CONTENIDO SI ESTAMOS EN ESA PESTAÑA
+        // Refrescar contenido si estamos en esa pestaña
         const tabContenido = document.getElementById('tab-contenido');
         if (tabContenido && tabContenido.style.display !== 'none') {
             renderContenido();
         }
-    } catch (err) { console.error('Error:', err); }
+    } catch (err) { 
+        console.error('Error cargando datos:', err); 
+    }
 }
 
 // ========== USUARIOS ==========
@@ -138,9 +140,9 @@ function renderContenido() {
         html += `<div class="categoria-block">
             <div class="categoria-header" onclick="toggleCat('cat-${cat.id}')">
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                    <h3> ${cat.nombre}</h3>
+                    <h3>🎯 ${cat.nombre}</h3>
                     <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); editCategoria('${cat.id}')" title="Editar">✏️</button>
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); delCategoria('${cat.id}')" title="Eliminar">️</button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); delCategoria('${cat.id}')" title="Eliminar">🗑️</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
                     <span style="color:white;">${nivelesCat.length} niveles • ${totalClases} clases</span>
@@ -416,8 +418,12 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
 
 // ========== ACCESOS ==========
 async function manageAccess(uid) {
+    // ✅ FORZAR RECARGA DE DATOS para asegurar que se vean las categorías/niveles recién creados
+    await loadData();
+    
     const u = users.find(x => x.id === uid);
     if (!u) return;
+    
     currentUserAccessing = uid;
     pendingAccess = {};
     
@@ -432,7 +438,7 @@ async function manageAccess(uid) {
     let html = '';
     categorias.forEach(cat => {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
-        if (nivelesCat.length === 0) return;
+        if (nivelesCat.length === 0) return; // No mostrar categorías sin niveles
 
         html += `<div class="categoria-acceso">
             <h4>🎯 ${cat.nombre}</h4>
@@ -447,7 +453,7 @@ async function manageAccess(uid) {
                        onchange="togglePendingAccess('${nivel.id}', this.checked)">
                 <label for="access-${nivel.id}">
                     <strong>${nivel.nombre}</strong>
-                    <span class="count">${count} videos</span>
+                    <span class="count">${count} video${count !== 1 ? 's' : ''}</span>
                 </label>
             </div>`;
         });
@@ -455,7 +461,7 @@ async function manageAccess(uid) {
         html += `</div></div>`;
     });
     
-    document.getElementById('accesosPorCategoria').innerHTML = html || '<p style="color:#999">Sin niveles disponibles</p>';
+    document.getElementById('accesosPorCategoria').innerHTML = html || '<p style="color:#999">No hay niveles disponibles. Crea niveles primero.</p>';
     openModal('modalAccesos');
 }
 
