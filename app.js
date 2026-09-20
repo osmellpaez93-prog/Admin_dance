@@ -32,12 +32,12 @@ function showMsg(id, text, type) {
     setTimeout(() => el.style.display = 'none', 3000);
 }
 
-// CARGAR DATOS
+// CARGAR DATOS (Actualizado para ordenar categorías por 'orden')
 async function loadData() {
     try {
         const [u, cat, n, c, s, a] = await Promise.all([
             db.from('users').select('*').order('created_at', { ascending: false }),
-            db.from('categorias').select('*').order('nombre'),
+            db.from('categorias').select('*').order('orden', { ascending: true }), // ✅ ORDENADO POR 'orden'
             db.from('niveles').select('*').order('orden'),
             db.from('clases').select('*').order('orden'),
             db.from('videos_sueltos').select('*').order('orden'),
@@ -59,7 +59,6 @@ async function loadData() {
         renderUsers();
         renderSueltos();
         
-        // Refrescar contenido si estamos en esa pestaña
         const tabContenido = document.getElementById('tab-contenido');
         if (tabContenido && tabContenido.style.display !== 'none') {
             renderContenido();
@@ -195,14 +194,15 @@ function toggleNivel(id) {
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-// ========== CATEGORÍAS ==========
+// ========== CATEGORÍAS (CORREGIDO) ==========
 function openModalCategoria() {
     document.getElementById('categoriaModalTitle').textContent = 'Nueva Categoría';
     document.getElementById('categoriaId').value = '';
     document.getElementById('categoriaNombre').value = '';
     document.getElementById('categoriaDesc').value = '';
-    openModal('modalCategoria');
     document.getElementById('categoriaThumbnail').value = '';
+    document.getElementById('categoriaOrden').value = '0'; // ✅ Agregado
+    openModal('modalCategoria');
 }
 
 function editCategoria(id) {
@@ -212,17 +212,21 @@ function editCategoria(id) {
     document.getElementById('categoriaId').value = cat.id;
     document.getElementById('categoriaNombre').value = cat.nombre || '';
     document.getElementById('categoriaDesc').value = cat.descripcion || '';
-    openModal('modalCategoria');
     document.getElementById('categoriaThumbnail').value = cat.thumbnail_url || '';
-
+    document.getElementById('categoriaOrden').value = cat.orden || 0; // ✅ Agregado
+    openModal('modalCategoria');
 }
 
 document.getElementById('formCategoria').addEventListener('submit', async e => {
     e.preventDefault();
     const id = document.getElementById('categoriaId').value;
+    
+    // ✅ AQUÍ ESTABA EL ERROR: Faltaban thumbnail_url y orden en el objeto data
     const data = {
         nombre: document.getElementById('categoriaNombre').value.trim(),
-        descripcion: document.getElementById('categoriaDesc').value.trim()
+        descripcion: document.getElementById('categoriaDesc').value.trim(),
+        thumbnail_url: document.getElementById('categoriaThumbnail').value.trim(),
+        orden: parseInt(document.getElementById('categoriaOrden').value) || 0
     };
     
     let error;
@@ -244,12 +248,6 @@ async function delCategoria(id) {
     if (error) alert('Error: ' + error.message);
     else loadData();
 }
-const data = {
-    nombre: document.getElementById('categoriaNombre').value.trim(),
-    descripcion: document.getElementById('categoriaDesc').value.trim(),
-    thumbnail_url: document.getElementById('categoriaThumbnail').value.trim(),
-    orden: parseInt(document.getElementById('categoriaOrden').value) || 0
-};
 
 // ========== NIVELES ==========
 function openModalNivel(categoriaId) {
@@ -427,7 +425,6 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
 
 // ========== ACCESOS ==========
 async function manageAccess(uid) {
-    // ✅ FORZAR RECARGA DE DATOS para asegurar que se vean las categorías/niveles recién creados
     await loadData();
     
     const u = users.find(x => x.id === uid);
@@ -438,16 +435,35 @@ async function manageAccess(uid) {
     
     document.getElementById('accesosTitle').textContent = `Accesos: ${u.name}`;
     document.getElementById('accesosInfo').innerHTML = `
-        <p><strong>Código:</strong> ${u.access_code}</p>
-        <p style="color:#f59e0b;margin-top:0.5rem">Marca los niveles y luego clic en "Guardar"</p>
+        <div style="background: linear-gradient(135deg, #f59e0b22, #dc262622); border: 2px solid #f59e0b; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="margin-bottom: 0.5rem;">
+                        <span style="color: #999; font-size: 0.85rem;">👤 USUARIO</span>
+                        <div style="color: white; font-size: 1.3rem; font-weight: bold;">${u.name}</div>
+                    </div>
+                    <div>
+                        <span style="color: #999; font-size: 0.85rem;">📱 TELÉFONO</span>
+                        <div style="color: white; font-size: 1rem;">${u.phone || '-'}</div>
+                    </div>
+                </div>
+                <div style="background: #000; border: 2px dashed #f59e0b; border-radius: 8px; padding: 1rem 1.5rem; text-align: center;">
+                    <div style="color: #999; font-size: 0.75rem; letter-spacing: 0.1em;">CÓDIGO DE ACCESO</div>
+                    <div style="color: #f59e0b; font-size: 1.8rem; font-weight: bold; font-family: monospace; letter-spacing: 0.15em;">${u.access_code}</div>
+                </div>
+            </div>
+        </div>
+        <p style="color:#f59e0b; font-size: 0.9rem;">⬇️ Marca los niveles a los que tendrá acceso este usuario</p>
     `;
     
     const userAccess = access.filter(a => a.user_id === uid).map(a => a.nivel_id);
     
     let html = '';
+    let totalAsignados = 0;
+    
     categorias.forEach(cat => {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
-        if (nivelesCat.length === 0) return; // No mostrar categorías sin niveles
+        if (nivelesCat.length === 0) return;
 
         html += `<div class="categoria-acceso">
             <h4>🎯 ${cat.nombre}</h4>
@@ -455,6 +471,7 @@ async function manageAccess(uid) {
         
         nivelesCat.forEach(nivel => {
             const hasAccess = userAccess.includes(nivel.id);
+            if (hasAccess) totalAsignados++;
             const count = clases.filter(c => c.nivel_id === nivel.id).length;
             
             html += `<div class="nivel-checkbox">
@@ -470,7 +487,17 @@ async function manageAccess(uid) {
         html += `</div></div>`;
     });
     
-    document.getElementById('accesosPorCategoria').innerHTML = html || '<p style="color:#999">No hay niveles disponibles. Crea niveles primero.</p>';
+    const resumen = `<div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <span style="color: #999; font-size: 0.85rem;">NIVELES ASIGNADOS:</span>
+            <span style="color: #10b981; font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem;">${totalAsignados}</span>
+        </div>
+        <div style="color: #999; font-size: 0.85rem;">
+            Total disponibles: ${niveles.length}
+        </div>
+    </div>`;
+    
+    document.getElementById('accesosPorCategoria').innerHTML = resumen + html || '<p style="color:#999">No hay niveles disponibles</p>';
     openModal('modalAccesos');
 }
 
