@@ -202,6 +202,7 @@ function openModalCategoria() {
     document.getElementById('categoriaNombre').value = '';
     document.getElementById('categoriaDesc').value = '';
     openModal('modalCategoria');
+    document.getElementById('categoriaThumbnail').value = '';
 }
 
 function editCategoria(id) {
@@ -212,6 +213,8 @@ function editCategoria(id) {
     document.getElementById('categoriaNombre').value = cat.nombre || '';
     document.getElementById('categoriaDesc').value = cat.descripcion || '';
     openModal('modalCategoria');
+    document.getElementById('categoriaThumbnail').value = cat.thumbnail_url || '';
+
 }
 
 document.getElementById('formCategoria').addEventListener('submit', async e => {
@@ -241,6 +244,12 @@ async function delCategoria(id) {
     if (error) alert('Error: ' + error.message);
     else loadData();
 }
+const data = {
+    nombre: document.getElementById('categoriaNombre').value.trim(),
+    descripcion: document.getElementById('categoriaDesc').value.trim(),
+    thumbnail_url: document.getElementById('categoriaThumbnail').value.trim(),
+    orden: parseInt(document.getElementById('categoriaOrden').value) || 0
+};
 
 // ========== NIVELES ==========
 function openModalNivel(categoriaId) {

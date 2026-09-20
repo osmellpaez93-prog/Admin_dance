@@ -95,6 +95,17 @@
                 <label>Descripción</label>
                 <textarea id="categoriaDesc" rows="3"></textarea>
             </div>
+            <div class="form-group">
+    <label>URL de Imagen/Video</label>
+    <input type="text" id="categoriaThumbnail" placeholder="https://ejemplo.com/imagen.jpg" class="form-control">
+    <small class="text-muted">Pega la URL de una imagen o video de YouTube</small>
+</div>
+
+<div class="form-group">
+    <label>Orden de visualización</label>
+    <input type="number" id="categoriaOrden" placeholder="0" class="form-control" min="0">
+    <small class="text-muted">Número más bajo = aparece primero</small>
+</div>
             <button type="submit" class="btn btn-primary">Guardar Categoría</button>
         </form>
     </div>
