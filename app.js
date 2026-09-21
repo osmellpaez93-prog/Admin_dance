@@ -32,12 +32,12 @@ function showMsg(id, text, type) {
     setTimeout(() => el.style.display = 'none', 3000);
 }
 
-// CARGAR DATOS (Actualizado para ordenar categorías por 'orden')
+// CARGAR DATOS
 async function loadData() {
     try {
         const [u, cat, n, c, s, a] = await Promise.all([
             db.from('users').select('*').order('created_at', { ascending: false }),
-            db.from('categorias').select('*').order('orden', { ascending: true }), // ✅ ORDENADO POR 'orden'
+            db.from('categorias').select('*').order('orden', { ascending: true }),
             db.from('niveles').select('*').order('orden'),
             db.from('clases').select('*').order('orden'),
             db.from('videos_sueltos').select('*').order('orden'),
@@ -194,14 +194,14 @@ function toggleNivel(id) {
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-// ========== CATEGORÍAS (CORREGIDO) ==========
+// ========== CATEGORÍAS ==========
 function openModalCategoria() {
     document.getElementById('categoriaModalTitle').textContent = 'Nueva Categoría';
     document.getElementById('categoriaId').value = '';
     document.getElementById('categoriaNombre').value = '';
     document.getElementById('categoriaDesc').value = '';
     document.getElementById('categoriaThumbnail').value = '';
-    document.getElementById('categoriaOrden').value = '0'; // ✅ Agregado
+    document.getElementById('categoriaOrden').value = '0';
     openModal('modalCategoria');
 }
 
@@ -213,7 +213,7 @@ function editCategoria(id) {
     document.getElementById('categoriaNombre').value = cat.nombre || '';
     document.getElementById('categoriaDesc').value = cat.descripcion || '';
     document.getElementById('categoriaThumbnail').value = cat.thumbnail_url || '';
-    document.getElementById('categoriaOrden').value = cat.orden || 0; // ✅ Agregado
+    document.getElementById('categoriaOrden').value = cat.orden || 0;
     openModal('modalCategoria');
 }
 
@@ -221,7 +221,6 @@ document.getElementById('formCategoria').addEventListener('submit', async e => {
     e.preventDefault();
     const id = document.getElementById('categoriaId').value;
     
-    // ✅ AQUÍ ESTABA EL ERROR: Faltaban thumbnail_url y orden en el objeto data
     const data = {
         nombre: document.getElementById('categoriaNombre').value.trim(),
         descripcion: document.getElementById('categoriaDesc').value.trim(),
@@ -361,18 +360,24 @@ async function delVideo(id) {
     else loadData();
 }
 
-// ========== VIDEOS SUELTOS ==========
+// ========== VIDEOS SUELTOS (CORREGIDO) ==========
 function renderSueltos() {
-    document.getElementById('sueltosTable').innerHTML = sueltos.map(s => `
+    document.getElementById('sueltosTable').innerHTML = sueltos.map(s => {
+        // ✅ Busca el nombre de la categoría usando el ID guardado
+        const categoria = categorias.find(c => c.id === s.categoria_id);
+        const nombreCategoria = categoria ? categoria.nombre : 'Sin asignar';
+        
+        return `
         <tr>
-            <td>${s.titulo||'-'}</td>
+            <td><strong>${s.titulo||'-'}</strong></td>
+            <td><span style="color:#f59e0b; font-weight:500;">${nombreCategoria}</span></td>
             <td>${s.video_url?.substring(0,40)||'-'}...</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
-                <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">🗑️</button>
+                <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')" title="Editar">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')" title="Eliminar">🗑️</button>
             </td>
         </tr>
-    `).join('');
+    `}).join('');
 }
 
 function openModalSuelto() {
@@ -424,7 +429,7 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
         descripcion: document.getElementById('sueltoDesc').value,
         video_url: document.getElementById('sueltoVideo').value,
         thumbnail_url: document.getElementById('sueltoThumb').value,
-        categoria_id: document.getElementById('sueltoCategoria').value || null, // ✅ NUEVO
+        categoria_id: document.getElementById('sueltoCategoria').value || null, // ✅ Guarda el ID de la categoría
         orden: parseInt(document.getElementById('sueltoOrden').value) || 1
     };
     
