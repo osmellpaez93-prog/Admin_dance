@@ -23,7 +23,7 @@
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('usuarios')"> Usuarios</button>
+        <button class="tab active" onclick="showTab('usuarios')">👥 Usuarios</button>
         <button class="tab" onclick="showTab('contenido')">📚 Contenido</button>
         <button class="tab" onclick="showTab('sueltos')">🎬 Videos Sueltos</button>
         <button class="tab" onclick="showTab('instructores')">👨‍🏫 Instructores</button>
@@ -71,7 +71,7 @@
                 <h3>Instructores</h3>
                 <button class="btn btn-success" onclick="openModalInstructor()">+ Nuevo Instructor</button>
             </div>
-            <p style="color:#999; margin-bottom:1rem;">Gestiona los profesores de la escuela. Puedes asignarlos a cada categoría.</p>
+            <p style="color:#999; margin-bottom:1rem;">Gestiona los profesores. Podrás asignar uno o varios a cada materia.</p>
             <table>
                 <thead><tr><th>Nombre</th><th>Especialidad</th><th>Instagram</th><th>Acciones</th></tr></thead>
                 <tbody id="instructoresTable"></tbody>
@@ -117,11 +117,11 @@
                 <input type="text" id="categoriaThumbnail" placeholder="https://ejemplo.com/imagen.jpg">
             </div>
             <div class="form-group">
-                <label>Instructor Principal</label>
-                <select id="categoriaInstructor">
-                    <option value="">-- Sin asignar --</option>
-                </select>
-                <small style="color:#999; font-size:0.8rem;">Profesor asignado a esta materia</small>
+                <label>Instructores</label>
+                <div id="categoriaInstructoresCheckboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #444; padding: 10px; border-radius: 6px; background: #1a1a1a;">
+                    <!-- Los checkboxes se generan con JS -->
+                </div>
+                <small style="color:#999; font-size:0.8rem;">Selecciona uno o más profesores para esta materia</small>
             </div>
             <div class="form-group">
                 <label>Orden de visualización</label>
@@ -143,18 +143,9 @@
         <form id="formNivel">
             <input type="hidden" id="nivelId">
             <input type="hidden" id="nivelCategoriaId">
-            <div class="form-group">
-                <label>Nombre *</label>
-                <input type="text" id="nivelNombre" placeholder="Ej: Inicial, Intermedio, Avanzado..." required>
-            </div>
-            <div class="form-group">
-                <label>Descripción</label>
-                <textarea id="nivelDesc" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Orden</label>
-                <input type="number" id="nivelOrden" value="1" min="1">
-            </div>
+            <div class="form-group"><label>Nombre *</label><input type="text" id="nivelNombre" required></div>
+            <div class="form-group"><label>Descripción</label><textarea id="nivelDesc" rows="3"></textarea></div>
+            <div class="form-group"><label>Orden</label><input type="number" id="nivelOrden" value="1" min="1"></div>
             <button type="submit" class="btn btn-primary">Guardar Nivel</button>
         </form>
     </div>
@@ -196,7 +187,6 @@
                 <select id="sueltoCategoria" required>
                     <option value="">-- Selecciona un estilo --</option>
                 </select>
-                <small style="color:#999; font-size:0.8rem; display:block; margin-top:4px;">Obligatorio para que aparezca en los filtros de la web</small>
             </div>
             <div class="form-group"><label>Título *</label><input type="text" id="sueltoTitulo" required></div>
             <div class="form-group"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
@@ -220,9 +210,9 @@
         <form id="formInstructor">
             <input type="hidden" id="instructorId">
             <div class="form-group"><label>Nombre *</label><input type="text" id="instructorNombre" required></div>
-            <div class="form-group"><label>Especialidad</label><input type="text" id="instructorEspecialidad" placeholder="Ej: Salsa, Bachata & Musicalidad"></div>
+            <div class="form-group"><label>Especialidad</label><input type="text" id="instructorEspecialidad" placeholder="Ej: Salsa, Bachata"></div>
             <div class="form-group"><label>URL Imagen</label><input type="text" id="instructorImagen" placeholder="https://... o /mell.jpg"></div>
-            <div class="form-group"><label>Instagram URL</label><input type="text" id="instructorInstagram" placeholder="https://instagram.com/usuario"></div>
+            <div class="form-group"><label>Instagram URL</label><input type="text" id="instructorInstagram"></div>
             <div class="form-group"><label>Biografía</label><textarea id="instructorBio" rows="3"></textarea></div>
             <div class="form-group"><label>Orden</label><input type="number" id="instructorOrden" value="0" min="0"></div>
             <button type="submit" class="btn btn-primary">Guardar Instructor</button>

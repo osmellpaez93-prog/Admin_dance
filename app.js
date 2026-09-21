@@ -64,12 +64,8 @@ async function loadData() {
         renderInstructores();
         
         const tabContenido = document.getElementById('tab-contenido');
-        if (tabContenido && tabContenido.style.display !== 'none') {
-            renderContenido();
-        }
-    } catch (err) { 
-        console.error('Error cargando datos:', err); 
-    }
+        if (tabContenido && tabContenido.style.display !== 'none') renderContenido();
+    } catch (err) { console.error('Error cargando datos:', err); }
 }
 
 // ========== USUARIOS ==========
@@ -82,7 +78,7 @@ function renderUsers() {
             <td>${u.phone||'-'}</td>
             <td><span style="color:${count>0?'#10b981':'#999'}">${count} nivel${count!==1?'es':''}</span></td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')"> Accesos</button>
+                <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')">🔑 Accesos</button>
                 <button class="btn btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
                 <button class="btn btn-sm btn-danger" onclick="del('users','${u.id}')">🗑️</button>
             </td>
@@ -135,14 +131,15 @@ document.getElementById('newUserForm').addEventListener('submit', async e => {
 // ========== CONTENIDO JERÁRQUICO ==========
 function renderContenido() {
     let html = '';
-    
     categorias.forEach(cat => {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
         const totalClases = nivelesCat.reduce((sum, n) => sum + clases.filter(c => c.nivel_id === n.id).length, 0);
         
-        // Buscar instructor asignado
-        const instructor = instructores.find(i => i.id === cat.instructor_id);
-        const nombreInstructor = instructor ? instructor.nombre : 'Sin asignar';
+        // Buscar instructores asignados (pueden ser varios)
+        const instructoresCat = instructores.filter(i => cat.instructor_ids?.includes(i.id));
+        const nombresInstructores = instructoresCat.length > 0 
+            ? instructoresCat.map(i => i.nombre).join(', ') 
+            : 'Sin asignar';
         
         html += `<div class="categoria-block">
             <div class="categoria-header" onclick="toggleCat('cat-${cat.id}')">
@@ -152,7 +149,7 @@ function renderContenido() {
                     <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); delCategoria('${cat.id}')" title="Eliminar">🗑️</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                    <span style="color:white;">${nivelesCat.length} niveles • ${totalClases} clases • 👨‍🏫 ${nombreInstructor}</span>
+                    <span style="color:white;">${nivelesCat.length} niveles • ${totalClases} clases • 👨‍🏫 ${nombresInstructores}</span>
                     <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); openModalNivel('${cat.id}')" title="Agregar Nivel">+ Nivel</button>
                 </div>
             </div>
@@ -160,7 +157,6 @@ function renderContenido() {
         
         nivelesCat.forEach(nivel => {
             const nivelClases = clases.filter(c => c.nivel_id === nivel.id).sort((a,b) => (a.orden||1) - (b.orden||1));
-            
             html += `<div class="nivel-item">
                 <div class="nivel-header" onclick="toggleNivel('nivel-${nivel.id}')">
                     <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
@@ -189,8 +185,7 @@ function renderContenido() {
         });
         html += `</div></div>`;
     });
-
-    document.getElementById('contenidoJerarquico').innerHTML = html || '<p style="color:#999;text-align:center;padding:2rem;">No hay categorías. Clic en "+ Nueva Categoría" para comenzar.</p>';
+    document.getElementById('contenidoJerarquico').innerHTML = html || '<p style="color:#999;text-align:center;padding:2rem;">No hay categorías.</p>';
 }
 
 function toggleCat(id) {
@@ -203,6 +198,24 @@ function toggleNivel(id) {
 }
 
 // ========== CATEGORÍAS ==========
+function renderInstructorCheckboxes(selectedIds = []) {
+    const container = document.getElementById('categoriaInstructoresCheckboxes');
+    container.innerHTML = '';
+    if (instructores.length === 0) {
+        container.innerHTML = '<p style="color:#999; font-size:0.8rem; margin:0;">No hay instructores creados aún.</p>';
+        return;
+    }
+    instructores.forEach(inst => {
+        const isChecked = selectedIds.includes(inst.id) ? 'checked' : '';
+        container.innerHTML += `
+            <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer; color:white;">
+                <input type="checkbox" class="instructor-checkbox" value="${inst.id}" ${isChecked}>
+                ${inst.nombre}
+            </label>
+        `;
+    });
+}
+
 function openModalCategoria() {
     document.getElementById('categoriaModalTitle').textContent = 'Nueva Categoría';
     document.getElementById('categoriaId').value = '';
@@ -210,14 +223,7 @@ function openModalCategoria() {
     document.getElementById('categoriaDesc').value = '';
     document.getElementById('categoriaThumbnail').value = '';
     document.getElementById('categoriaOrden').value = '0';
-    
-    // Llenar select de instructores
-    const selectInst = document.getElementById('categoriaInstructor');
-    selectInst.innerHTML = '<option value="">-- Sin asignar --</option>';
-    instructores.forEach(inst => {
-        selectInst.innerHTML += `<option value="${inst.id}">${inst.nombre}</option>`;
-    });
-    
+    renderInstructorCheckboxes([]);
     openModal('modalCategoria');
 }
 
@@ -230,15 +236,7 @@ function editCategoria(id) {
     document.getElementById('categoriaDesc').value = cat.descripcion || '';
     document.getElementById('categoriaThumbnail').value = cat.thumbnail_url || '';
     document.getElementById('categoriaOrden').value = cat.orden || 0;
-    
-    // Llenar y seleccionar instructor
-    const selectInst = document.getElementById('categoriaInstructor');
-    selectInst.innerHTML = '<option value="">-- Sin asignar --</option>';
-    instructores.forEach(inst => {
-        selectInst.innerHTML += `<option value="${inst.id}">${inst.nombre}</option>`;
-    });
-    selectInst.value = cat.instructor_id || '';
-    
+    renderInstructorCheckboxes(cat.instructor_ids || []);
     openModal('modalCategoria');
 }
 
@@ -246,12 +244,15 @@ document.getElementById('formCategoria').addEventListener('submit', async e => {
     e.preventDefault();
     const id = document.getElementById('categoriaId').value;
     
+    // Recoger todos los checkboxes marcados
+    const checkedInstructors = Array.from(document.querySelectorAll('.instructor-checkbox:checked')).map(cb => cb.value);
+    
     const data = {
         nombre: document.getElementById('categoriaNombre').value.trim(),
         descripcion: document.getElementById('categoriaDesc').value.trim(),
         thumbnail_url: document.getElementById('categoriaThumbnail').value.trim(),
         orden: parseInt(document.getElementById('categoriaOrden').value) || 0,
-        instructor_id: document.getElementById('categoriaInstructor').value || null
+        instructor_ids: checkedInstructors // ✅ Guarda el array de IDs
     };
     
     let error;
@@ -262,13 +263,12 @@ document.getElementById('formCategoria').addEventListener('submit', async e => {
         const r = await db.from('categorias').insert([data]);
         error = r.error;
     }
-    
     if (error) alert('Error: ' + error.message);
     else { closeModal('modalCategoria'); loadData(); }
 });
 
 async function delCategoria(id) {
-    if (!confirm('¿Eliminar esta categoría? Se eliminarán también todos sus niveles y clases.')) return;
+    if (!confirm('¿Eliminar esta categoría?')) return;
     const { error } = await db.from('categorias').delete().eq('id', id);
     if (error) alert('Error: ' + error.message);
     else loadData();
@@ -306,22 +306,13 @@ document.getElementById('formNivel').addEventListener('submit', async e => {
         categoria_id: document.getElementById('nivelCategoriaId').value,
         orden: parseInt(document.getElementById('nivelOrden').value) || 1
     };
-    
-    let error;
-    if (id) {
-        const r = await db.from('niveles').update(data).eq('id', id);
-        error = r.error;
-    } else {
-        const r = await db.from('niveles').insert([data]);
-        error = r.error;
-    }
-    
+    let error = id ? (await db.from('niveles').update(data).eq('id', id)).error : (await db.from('niveles').insert([data])).error;
     if (error) alert('Error: ' + error.message);
     else { closeModal('modalNivel'); loadData(); }
 });
 
 async function delNivel(id) {
-    if (!confirm('¿Eliminar este nivel? Se eliminarán también todas sus clases.')) return;
+    if (!confirm('¿Eliminar este nivel?')) return;
     const { error } = await db.from('niveles').delete().eq('id', id);
     if (error) alert('Error: ' + error.message);
     else loadData();
@@ -365,16 +356,7 @@ document.getElementById('formVideo').addEventListener('submit', async e => {
         nivel_id: document.getElementById('videoNivelId').value,
         orden: parseInt(document.getElementById('videoOrden').value) || 1
     };
-    
-    let error;
-    if (id) {
-        const r = await db.from('clases').update(data).eq('id', id);
-        error = r.error;
-    } else {
-        const r = await db.from('clases').insert([data]);
-        error = r.error;
-    }
-    
+    let error = id ? (await db.from('clases').update(data).eq('id', id)).error : (await db.from('clases').insert([data])).error;
     if (error) alert('Error: ' + error.message);
     else { closeModal('modalVideo'); loadData(); }
 });
@@ -390,19 +372,16 @@ async function delVideo(id) {
 function renderSueltos() {
     document.getElementById('sueltosTable').innerHTML = sueltos.map(s => {
         const categoria = categorias.find(c => c.id === s.categoria_id);
-        const nombreCategoria = categoria ? categoria.nombre : 'Sin asignar';
-        
-        return `
-        <tr>
+        return `<tr>
             <td><strong>${s.titulo||'-'}</strong></td>
-            <td><span style="color:#f59e0b; font-weight:500;">${nombreCategoria}</span></td>
+            <td><span style="color:#f59e0b;">${categoria ? categoria.nombre : 'Sin asignar'}</span></td>
             <td>${s.video_url?.substring(0,40)||'-'}...</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')" title="Editar">✏️</button>
-                <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')" title="Eliminar">🗑️</button>
+                <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="del('videos_sueltos','${s.id}')">🗑️</button>
             </td>
-        </tr>
-    `}).join('');
+        </tr>`;
+    }).join('');
 }
 
 function openModalSuelto() {
@@ -413,13 +392,9 @@ function openModalSuelto() {
     document.getElementById('sueltoVideo').value = '';
     document.getElementById('sueltoThumb').value = '';
     document.getElementById('sueltoOrden').value = '1';
-    
     const selectCat = document.getElementById('sueltoCategoria');
     selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
-    categorias.forEach(cat => {
-        selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
-    });
-    
+    categorias.forEach(cat => { selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`; });
     openModal('modalSuelto');
 }
 
@@ -433,14 +408,10 @@ function editSuelto(id) {
     document.getElementById('sueltoVideo').value = s.video_url || '';
     document.getElementById('sueltoThumb').value = s.thumbnail_url || '';
     document.getElementById('sueltoOrden').value = s.orden || 1;
-    
     const selectCat = document.getElementById('sueltoCategoria');
     selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
-    categorias.forEach(cat => {
-        selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
-    });
+    categorias.forEach(cat => { selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`; });
     selectCat.value = s.categoria_id || '';
-    
     openModal('modalSuelto');
 }
 
@@ -455,16 +426,7 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
         categoria_id: document.getElementById('sueltoCategoria').value || null,
         orden: parseInt(document.getElementById('sueltoOrden').value) || 1
     };
-    
-    let error;
-    if (id) {
-        const r = await db.from('videos_sueltos').update(data).eq('id', id);
-        error = r.error;
-    } else {
-        const r = await db.from('videos_sueltos').insert([data]);
-        error = r.error;
-    }
-    
+    let error = id ? (await db.from('videos_sueltos').update(data).eq('id', id)).error : (await db.from('videos_sueltos').insert([data])).error;
     if (error) alert('Error: ' + error.message);
     else { closeModal('modalSuelto'); document.getElementById('formSuelto').reset(); loadData(); }
 });
@@ -477,8 +439,8 @@ function renderInstructores() {
             <td>${inst.especialidad || '-'}</td>
             <td>${inst.instagram ? '🔗 Link' : '-'}</td>
             <td>
-                <button class="btn btn-sm btn-warning" onclick="editInstructor('${inst.id}')" title="Editar">✏️</button>
-                <button class="btn btn-sm btn-danger" onclick="del('instructores','${inst.id}')" title="Eliminar">🗑️</button>
+                <button class="btn btn-sm btn-warning" onclick="editInstructor('${inst.id}')">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="del('instructores','${inst.id}')">🗑️</button>
             </td>
         </tr>
     `).join('');
@@ -521,16 +483,7 @@ document.getElementById('formInstructor').addEventListener('submit', async e => 
         bio: document.getElementById('instructorBio').value.trim(),
         orden: parseInt(document.getElementById('instructorOrden').value) || 0
     };
-    
-    let error;
-    if (id) {
-        const r = await db.from('instructores').update(data).eq('id', id);
-        error = r.error;
-    } else {
-        const r = await db.from('instructores').insert([data]);
-        error = r.error;
-    }
-    
+    let error = id ? (await db.from('instructores').update(data).eq('id', id)).error : (await db.from('instructores').insert([data])).error;
     if (error) alert('Error: ' + error.message);
     else { closeModal('modalInstructor'); loadData(); }
 });
@@ -538,125 +491,56 @@ document.getElementById('formInstructor').addEventListener('submit', async e => 
 // ========== ACCESOS ==========
 async function manageAccess(uid) {
     await loadData();
-    
     const u = users.find(x => x.id === uid);
     if (!u) return;
-    
     currentUserAccessing = uid;
     pendingAccess = {};
-    
     document.getElementById('accesosTitle').textContent = `Accesos: ${u.name}`;
-    document.getElementById('accesosInfo').innerHTML = `
-        <div style="background: linear-gradient(135deg, #f59e0b22, #dc262622); border: 2px solid #f59e0b; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 200px;">
-                    <div style="margin-bottom: 0.5rem;">
-                        <span style="color: #999; font-size: 0.85rem;">👤 USUARIO</span>
-                        <div style="color: white; font-size: 1.3rem; font-weight: bold;">${u.name}</div>
-                    </div>
-                    <div>
-                        <span style="color: #999; font-size: 0.85rem;">📱 TELÉFONO</span>
-                        <div style="color: white; font-size: 1rem;">${u.phone || '-'}</div>
-                    </div>
-                </div>
-                <div style="background: #000; border: 2px dashed #f59e0b; border-radius: 8px; padding: 1rem 1.5rem; text-align: center;">
-                    <div style="color: #999; font-size: 0.75rem; letter-spacing: 0.1em;">CÓDIGO DE ACCESO</div>
-                    <div style="color: #f59e0b; font-size: 1.8rem; font-weight: bold; font-family: monospace; letter-spacing: 0.15em;">${u.access_code}</div>
-                </div>
-            </div>
-        </div>
-        <p style="color:#f59e0b; font-size: 0.9rem;">⬇️ Marca los niveles a los que tendrá acceso este usuario</p>
-    `;
-    
+    document.getElementById('accesosInfo').innerHTML = `<p style="color:#f59e0b;">Código: <strong>${u.access_code}</strong></p>`;
     const userAccess = access.filter(a => a.user_id === uid).map(a => a.nivel_id);
-    
     let html = '';
-    let totalAsignados = 0;
-    
     categorias.forEach(cat => {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
         if (nivelesCat.length === 0) return;
-
-        html += `<div class="categoria-acceso">
-            <h4>🎯 ${cat.nombre}</h4>
-            <div class="niveles-grid">`;
-        
+        html += `<div class="categoria-acceso"><h4>🎯 ${cat.nombre}</h4><div class="niveles-grid">`;
         nivelesCat.forEach(nivel => {
             const hasAccess = userAccess.includes(nivel.id);
-            if (hasAccess) totalAsignados++;
-            const count = clases.filter(c => c.nivel_id === nivel.id).length;
-            
             html += `<div class="nivel-checkbox">
-                <input type="checkbox" id="access-${nivel.id}" ${hasAccess?'checked':''} 
-                       onchange="togglePendingAccess('${nivel.id}', this.checked)">
-                <label for="access-${nivel.id}">
-                    <strong>${nivel.nombre}</strong>
-                    <span class="count">${count} video${count !== 1 ? 's' : ''}</span>
-                </label>
+                <input type="checkbox" id="access-${nivel.id}" ${hasAccess?'checked':''} onchange="togglePendingAccess('${nivel.id}', this.checked)">
+                <label for="access-${nivel.id}"><strong>${nivel.nombre}</strong></label>
             </div>`;
         });
-        
         html += `</div></div>`;
     });
-    
-    const resumen = `<div style="background: #2a2a2a; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <span style="color: #999; font-size: 0.85rem;">NIVELES ASIGNADOS:</span>
-            <span style="color: #10b981; font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem;">${totalAsignados}</span>
-        </div>
-        <div style="color: #999; font-size: 0.85rem;">
-            Total disponibles: ${niveles.length}
-        </div>
-    </div>`;
-    
-    document.getElementById('accesosPorCategoria').innerHTML = resumen + html || '<p style="color:#999">No hay niveles disponibles</p>';
+    document.getElementById('accesosPorCategoria').innerHTML = html || '<p style="color:#999">No hay niveles</p>';
     openModal('modalAccesos');
 }
 
-function togglePendingAccess(nivelId, checked) {
-    pendingAccess[nivelId] = checked;
-}
+function togglePendingAccess(nivelId, checked) { pendingAccess[nivelId] = checked; }
 
 async function saveAllAccess() {
     if (!currentUserAccessing) return;
-    
     const userAccess = access.filter(a => a.user_id === currentUserAccessing).map(a => a.nivel_id);
-    
-    const toAdd = [];
-    const toRemove = [];
-    
+    const toAdd = [], toRemove = [];
     Object.keys(pendingAccess).forEach(nivelId => {
-        if (pendingAccess[nivelId] && !userAccess.includes(nivelId)) {
-            toAdd.push(nivelId);
-        } else if (!pendingAccess[nivelId] && userAccess.includes(nivelId)) {
-            toRemove.push(nivelId);
-        }
+        if (pendingAccess[nivelId] && !userAccess.includes(nivelId)) toAdd.push(nivelId);
+        else if (!pendingAccess[nivelId] && userAccess.includes(nivelId)) toRemove.push(nivelId);
     });
-    
     let error = null;
     if (toAdd.length > 0) {
-        const inserts = toAdd.map(nivelId => ({ user_id: currentUserAccessing, nivel_id: nivelId }));
-        const r = await db.from('user_access').insert(inserts);
+        const r = await db.from('user_access').insert(toAdd.map(nivelId => ({ user_id: currentUserAccessing, nivel_id: nivelId })));
         if (r.error) error = r.error;
     }
-    
     if (toRemove.length > 0 && !error) {
         for (const nivelId of toRemove) {
             const r = await db.from('user_access').delete().eq('user_id', currentUserAccessing).eq('nivel_id', nivelId);
             if (r.error) { error = r.error; break; }
         }
     }
-    
-    if (error) {
-        alert('Error al guardar: ' + error.message);
-    } else {
-        alert(`✅ Accesos actualizados\nAgregados: ${toAdd.length}\nRemovidos: ${toRemove.length}`);
-        closeModal('modalAccesos');
-        loadData();
-    }
+    if (error) alert('Error: ' + error.message);
+    else { alert('✅ Accesos actualizados'); closeModal('modalAccesos'); loadData(); }
 }
 
-// ========== ELIMINAR GENÉRICO ==========
 async function del(table, id) {
     if (!confirm('¿Eliminar?')) return;
     const { error } = await db.from(table).delete().eq('id', id);
@@ -664,7 +548,6 @@ async function del(table, id) {
     else loadData();
 }
 
-// CERRAR MODALES AL CLIC FUERA
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
     if (e.target === m) m.classList.remove('active');
 }));
