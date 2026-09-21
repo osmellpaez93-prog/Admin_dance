@@ -5,7 +5,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // VARIABLES GLOBALES
-let users = [], categorias = [], niveles = [], clases = [], sueltos = [], access = [];
+let users = [], categorias = [], niveles = [], clases = [], sueltos = [], access = [], instructores = [];
 let currentUserAccessing = null;
 let pendingAccess = {};
 
@@ -35,13 +35,14 @@ function showMsg(id, text, type) {
 // CARGAR DATOS
 async function loadData() {
     try {
-        const [u, cat, n, c, s, a] = await Promise.all([
+        const [u, cat, n, c, s, a, inst] = await Promise.all([
             db.from('users').select('*').order('created_at', { ascending: false }),
             db.from('categorias').select('*').order('orden', { ascending: true }),
             db.from('niveles').select('*').order('orden'),
             db.from('clases').select('*').order('orden'),
             db.from('videos_sueltos').select('*').order('orden'),
-            db.from('user_access').select('*')
+            db.from('user_access').select('*'),
+            db.from('instructores').select('*').order('orden')
         ]);
         
         users = u.data || [];
@@ -50,14 +51,17 @@ async function loadData() {
         clases = c.data || [];
         sueltos = s.data || [];
         access = a.data || [];
+        instructores = inst.data || [];
 
         document.getElementById('statUsers').textContent = users.length;
         document.getElementById('statCategorias').textContent = categorias.length;
         document.getElementById('statClases').textContent = clases.length;
         document.getElementById('statSueltos').textContent = sueltos.length;
+        document.getElementById('statInstructores').textContent = instructores.length;
 
         renderUsers();
         renderSueltos();
+        renderInstructores();
         
         const tabContenido = document.getElementById('tab-contenido');
         if (tabContenido && tabContenido.style.display !== 'none') {
@@ -78,7 +82,7 @@ function renderUsers() {
             <td>${u.phone||'-'}</td>
             <td><span style="color:${count>0?'#10b981':'#999'}">${count} nivel${count!==1?'es':''}</span></td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')">🔑 Accesos</button>
+                <button class="btn btn-sm btn-primary" onclick="manageAccess('${u.id}')"> Accesos</button>
                 <button class="btn btn-sm btn-warning" onclick="editUser('${u.id}')">✏️</button>
                 <button class="btn btn-sm btn-danger" onclick="del('users','${u.id}')">🗑️</button>
             </td>
@@ -136,6 +140,10 @@ function renderContenido() {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
         const totalClases = nivelesCat.reduce((sum, n) => sum + clases.filter(c => c.nivel_id === n.id).length, 0);
         
+        // Buscar instructor asignado
+        const instructor = instructores.find(i => i.id === cat.instructor_id);
+        const nombreInstructor = instructor ? instructor.nombre : 'Sin asignar';
+        
         html += `<div class="categoria-block">
             <div class="categoria-header" onclick="toggleCat('cat-${cat.id}')">
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
@@ -144,7 +152,7 @@ function renderContenido() {
                     <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); delCategoria('${cat.id}')" title="Eliminar">🗑️</button>
                 </div>
                 <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                    <span style="color:white;">${nivelesCat.length} niveles • ${totalClases} clases</span>
+                    <span style="color:white;">${nivelesCat.length} niveles • ${totalClases} clases • 👨‍🏫 ${nombreInstructor}</span>
                     <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); openModalNivel('${cat.id}')" title="Agregar Nivel">+ Nivel</button>
                 </div>
             </div>
@@ -202,6 +210,14 @@ function openModalCategoria() {
     document.getElementById('categoriaDesc').value = '';
     document.getElementById('categoriaThumbnail').value = '';
     document.getElementById('categoriaOrden').value = '0';
+    
+    // Llenar select de instructores
+    const selectInst = document.getElementById('categoriaInstructor');
+    selectInst.innerHTML = '<option value="">-- Sin asignar --</option>';
+    instructores.forEach(inst => {
+        selectInst.innerHTML += `<option value="${inst.id}">${inst.nombre}</option>`;
+    });
+    
     openModal('modalCategoria');
 }
 
@@ -214,6 +230,15 @@ function editCategoria(id) {
     document.getElementById('categoriaDesc').value = cat.descripcion || '';
     document.getElementById('categoriaThumbnail').value = cat.thumbnail_url || '';
     document.getElementById('categoriaOrden').value = cat.orden || 0;
+    
+    // Llenar y seleccionar instructor
+    const selectInst = document.getElementById('categoriaInstructor');
+    selectInst.innerHTML = '<option value="">-- Sin asignar --</option>';
+    instructores.forEach(inst => {
+        selectInst.innerHTML += `<option value="${inst.id}">${inst.nombre}</option>`;
+    });
+    selectInst.value = cat.instructor_id || '';
+    
     openModal('modalCategoria');
 }
 
@@ -225,7 +250,8 @@ document.getElementById('formCategoria').addEventListener('submit', async e => {
         nombre: document.getElementById('categoriaNombre').value.trim(),
         descripcion: document.getElementById('categoriaDesc').value.trim(),
         thumbnail_url: document.getElementById('categoriaThumbnail').value.trim(),
-        orden: parseInt(document.getElementById('categoriaOrden').value) || 0
+        orden: parseInt(document.getElementById('categoriaOrden').value) || 0,
+        instructor_id: document.getElementById('categoriaInstructor').value || null
     };
     
     let error;
@@ -360,10 +386,9 @@ async function delVideo(id) {
     else loadData();
 }
 
-// ========== VIDEOS SUELTOS (CORREGIDO) ==========
+// ========== VIDEOS SUELTOS ==========
 function renderSueltos() {
     document.getElementById('sueltosTable').innerHTML = sueltos.map(s => {
-        // ✅ Busca el nombre de la categoría usando el ID guardado
         const categoria = categorias.find(c => c.id === s.categoria_id);
         const nombreCategoria = categoria ? categoria.nombre : 'Sin asignar';
         
@@ -389,7 +414,6 @@ function openModalSuelto() {
     document.getElementById('sueltoThumb').value = '';
     document.getElementById('sueltoOrden').value = '1';
     
-    // Llenar el select de categorías
     const selectCat = document.getElementById('sueltoCategoria');
     selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
     categorias.forEach(cat => {
@@ -410,7 +434,6 @@ function editSuelto(id) {
     document.getElementById('sueltoThumb').value = s.thumbnail_url || '';
     document.getElementById('sueltoOrden').value = s.orden || 1;
     
-    // Llenar y seleccionar la categoría
     const selectCat = document.getElementById('sueltoCategoria');
     selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
     categorias.forEach(cat => {
@@ -429,7 +452,7 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
         descripcion: document.getElementById('sueltoDesc').value,
         video_url: document.getElementById('sueltoVideo').value,
         thumbnail_url: document.getElementById('sueltoThumb').value,
-        categoria_id: document.getElementById('sueltoCategoria').value || null, // ✅ Guarda el ID de la categoría
+        categoria_id: document.getElementById('sueltoCategoria').value || null,
         orden: parseInt(document.getElementById('sueltoOrden').value) || 1
     };
     
@@ -444,6 +467,72 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
     
     if (error) alert('Error: ' + error.message);
     else { closeModal('modalSuelto'); document.getElementById('formSuelto').reset(); loadData(); }
+});
+
+// ========== INSTRUCTORES ==========
+function renderInstructores() {
+    document.getElementById('instructoresTable').innerHTML = instructores.map(inst => `
+        <tr>
+            <td><strong>${inst.nombre}</strong></td>
+            <td>${inst.especialidad || '-'}</td>
+            <td>${inst.instagram ? '🔗 Link' : '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editInstructor('${inst.id}')" title="Editar">✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="del('instructores','${inst.id}')" title="Eliminar">🗑️</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openModalInstructor() {
+    document.getElementById('instructorModalTitle').textContent = 'Nuevo Instructor';
+    document.getElementById('instructorId').value = '';
+    document.getElementById('instructorNombre').value = '';
+    document.getElementById('instructorEspecialidad').value = '';
+    document.getElementById('instructorImagen').value = '';
+    document.getElementById('instructorInstagram').value = '';
+    document.getElementById('instructorBio').value = '';
+    document.getElementById('instructorOrden').value = '0';
+    openModal('modalInstructor');
+}
+
+function editInstructor(id) {
+    const inst = instructores.find(i => i.id === id);
+    if (!inst) return;
+    document.getElementById('instructorModalTitle').textContent = 'Editar Instructor';
+    document.getElementById('instructorId').value = inst.id;
+    document.getElementById('instructorNombre').value = inst.nombre || '';
+    document.getElementById('instructorEspecialidad').value = inst.especialidad || '';
+    document.getElementById('instructorImagen').value = inst.imagen || '';
+    document.getElementById('instructorInstagram').value = inst.instagram || '';
+    document.getElementById('instructorBio').value = inst.bio || '';
+    document.getElementById('instructorOrden').value = inst.orden || 0;
+    openModal('modalInstructor');
+}
+
+document.getElementById('formInstructor').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id = document.getElementById('instructorId').value;
+    const data = {
+        nombre: document.getElementById('instructorNombre').value.trim(),
+        especialidad: document.getElementById('instructorEspecialidad').value.trim(),
+        imagen: document.getElementById('instructorImagen').value.trim(),
+        instagram: document.getElementById('instructorInstagram').value.trim(),
+        bio: document.getElementById('instructorBio').value.trim(),
+        orden: parseInt(document.getElementById('instructorOrden').value) || 0
+    };
+    
+    let error;
+    if (id) {
+        const r = await db.from('instructores').update(data).eq('id', id);
+        error = r.error;
+    } else {
+        const r = await db.from('instructores').insert([data]);
+        error = r.error;
+    }
+    
+    if (error) alert('Error: ' + error.message);
+    else { closeModal('modalInstructor'); loadData(); }
 });
 
 // ========== ACCESOS ==========

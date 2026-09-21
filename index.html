@@ -19,12 +19,14 @@
         <div class="stat-card"><div class="stat-number" id="statCategorias">0</div><div>Categorías</div></div>
         <div class="stat-card"><div class="stat-number" id="statClases">0</div><div>Clases</div></div>
         <div class="stat-card"><div class="stat-number" id="statSueltos">0</div><div>Videos Sueltos</div></div>
+        <div class="stat-card"><div class="stat-number" id="statInstructores">0</div><div>Instructores</div></div>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="showTab('usuarios')">👥 Usuarios</button>
+        <button class="tab active" onclick="showTab('usuarios')"> Usuarios</button>
         <button class="tab" onclick="showTab('contenido')">📚 Contenido</button>
         <button class="tab" onclick="showTab('sueltos')">🎬 Videos Sueltos</button>
+        <button class="tab" onclick="showTab('instructores')">👨‍🏫 Instructores</button>
         <button class="tab" onclick="showTab('nuevo')">➕ Nuevo Usuario</button>
     </div>
 
@@ -58,6 +60,21 @@
             <table>
                 <thead><tr><th>Título</th><th>Estilo</th><th>URL</th><th>Acciones</th></tr></thead>
                 <tbody id="sueltosTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- INSTRUCTORES -->
+    <div id="tab-instructores" class="tab-content" style="display:none;">
+        <div class="section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3>Instructores</h3>
+                <button class="btn btn-success" onclick="openModalInstructor()">+ Nuevo Instructor</button>
+            </div>
+            <p style="color:#999; margin-bottom:1rem;">Gestiona los profesores de la escuela. Puedes asignarlos a cada categoría.</p>
+            <table>
+                <thead><tr><th>Nombre</th><th>Especialidad</th><th>Instagram</th><th>Acciones</th></tr></thead>
+                <tbody id="instructoresTable"></tbody>
             </table>
         </div>
     </div>
@@ -98,6 +115,13 @@
             <div class="form-group">
                 <label>URL de Imagen/Video</label>
                 <input type="text" id="categoriaThumbnail" placeholder="https://ejemplo.com/imagen.jpg">
+            </div>
+            <div class="form-group">
+                <label>Instructor Principal</label>
+                <select id="categoriaInstructor">
+                    <option value="">-- Sin asignar --</option>
+                </select>
+                <small style="color:#999; font-size:0.8rem;">Profesor asignado a esta materia</small>
             </div>
             <div class="form-group">
                 <label>Orden de visualización</label>
@@ -158,7 +182,7 @@
     </div>
 </div>
 
-<!-- MODAL: VIDEO SUELTO (✅ AQUÍ ESTÁ EL CAMPO CORREGIDO) -->
+<!-- MODAL: VIDEO SUELTO -->
 <div id="modalSuelto" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -167,8 +191,6 @@
         </div>
         <form id="formSuelto">
             <input type="hidden" id="sueltoId">
-            
-            <!-- ✅ CAMPO DE CATEGORÍA AGREGADO CORRECTAMENTE -->
             <div class="form-group">
                 <label>Estilo / Categoría *</label>
                 <select id="sueltoCategoria" required>
@@ -176,8 +198,6 @@
                 </select>
                 <small style="color:#999; font-size:0.8rem; display:block; margin-top:4px;">Obligatorio para que aparezca en los filtros de la web</small>
             </div>
-            <!-- ✅ FIN DEL CAMPO -->
-
             <div class="form-group"><label>Título *</label><input type="text" id="sueltoTitulo" required></div>
             <div class="form-group"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
             <div class="form-row">
@@ -186,6 +206,26 @@
             </div>
             <div class="form-group"><label>Orden</label><input type="number" id="sueltoOrden" value="1" min="1"></div>
             <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL: INSTRUCTOR -->
+<div id="modalInstructor" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="instructorModalTitle">Nuevo Instructor</h3>
+            <button class="close-btn" onclick="closeModal('modalInstructor')">&times;</button>
+        </div>
+        <form id="formInstructor">
+            <input type="hidden" id="instructorId">
+            <div class="form-group"><label>Nombre *</label><input type="text" id="instructorNombre" required></div>
+            <div class="form-group"><label>Especialidad</label><input type="text" id="instructorEspecialidad" placeholder="Ej: Salsa, Bachata & Musicalidad"></div>
+            <div class="form-group"><label>URL Imagen</label><input type="text" id="instructorImagen" placeholder="https://... o /mell.jpg"></div>
+            <div class="form-group"><label>Instagram URL</label><input type="text" id="instructorInstagram" placeholder="https://instagram.com/usuario"></div>
+            <div class="form-group"><label>Biografía</label><textarea id="instructorBio" rows="3"></textarea></div>
+            <div class="form-group"><label>Orden</label><input type="number" id="instructorOrden" value="0" min="0"></div>
+            <button type="submit" class="btn btn-primary">Guardar Instructor</button>
         </form>
     </div>
 </div>
