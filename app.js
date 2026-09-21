@@ -383,6 +383,14 @@ function openModalSuelto() {
     document.getElementById('sueltoVideo').value = '';
     document.getElementById('sueltoThumb').value = '';
     document.getElementById('sueltoOrden').value = '1';
+    
+    // Llenar el select de categorías
+    const selectCat = document.getElementById('sueltoCategoria');
+    selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
+    categorias.forEach(cat => {
+        selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
+    });
+    
     openModal('modalSuelto');
 }
 
@@ -396,6 +404,15 @@ function editSuelto(id) {
     document.getElementById('sueltoVideo').value = s.video_url || '';
     document.getElementById('sueltoThumb').value = s.thumbnail_url || '';
     document.getElementById('sueltoOrden').value = s.orden || 1;
+    
+    // Llenar y seleccionar la categoría
+    const selectCat = document.getElementById('sueltoCategoria');
+    selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
+    categorias.forEach(cat => {
+        selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
+    });
+    selectCat.value = s.categoria_id || '';
+    
     openModal('modalSuelto');
 }
 
@@ -407,6 +424,7 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
         descripcion: document.getElementById('sueltoDesc').value,
         video_url: document.getElementById('sueltoVideo').value,
         thumbnail_url: document.getElementById('sueltoThumb').value,
+        categoria_id: document.getElementById('sueltoCategoria').value || null, // ✅ NUEVO
         orden: parseInt(document.getElementById('sueltoOrden').value) || 1
     };
     
