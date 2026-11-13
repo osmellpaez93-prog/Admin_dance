@@ -119,7 +119,6 @@
             <div class="form-group">
                 <label>Instructores</label>
                 <div id="categoriaInstructoresCheckboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #444; padding: 10px; border-radius: 6px; background: #1a1a1a;">
-                    <!-- Los checkboxes se generan con JS -->
                 </div>
                 <small style="color:#999; font-size:0.8rem;">Selecciona uno o más profesores para esta materia</small>
             </div>
@@ -167,11 +166,12 @@
                 <div class="form-group"><label>URL Video *</label><input type="text" id="videoUrl" required></div>
                 <div class="form-group"><label>URL Thumbnail</label><input type="text" id="videoThumb"></div>
             </div>
-            <!-- ✅ NUEVO: Selector de Tipo de Video -->
             <div class="form-group">
                 <label>Tipo de Video *</label>
                 <select id="videoTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
                     <option value="youtube">YouTube</option>
+                    <option value="mp4">Video MP4 (Bunny/Directo)</option>
+                    <option value="hls">Stream HLS (Bunny)</option>
                     <option value="instagram">Instagram Reel</option>
                     <option value="facebook">Facebook Reel</option>
                 </select>
@@ -203,11 +203,12 @@
                 <div class="form-group"><label>URL Video *</label><input type="text" id="sueltoVideo" required></div>
                 <div class="form-group"><label>URL Thumbnail</label><input type="text" id="sueltoThumb"></div>
             </div>
-            <!-- ✅ NUEVO: Selector de Tipo de Video -->
             <div class="form-group">
                 <label>Tipo de Video *</label>
                 <select id="sueltoTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
                     <option value="youtube">YouTube</option>
+                    <option value="mp4">Video MP4 (Bunny/Directo)</option>
+                    <option value="hls">Stream HLS (Bunny)</option>
                     <option value="instagram">Instagram Reel</option>
                     <option value="facebook">Facebook Reel</option>
                 </select>
