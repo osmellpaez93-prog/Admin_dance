@@ -58,7 +58,7 @@
         <div class="section">
             <h3>Videos Sueltos <button class="btn btn-success btn-sm" onclick="openModalSuelto()">+ Nuevo</button></h3>
             <table>
-                <thead><tr><th>Título</th><th>Estilo</th><th>URL</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Título</th><th>Estilo</th><th>Tipo</th><th>URL</th><th>Acciones</th></tr></thead>
                 <tbody id="sueltosTable"></tbody>
             </table>
         </div>
@@ -167,6 +167,15 @@
                 <div class="form-group"><label>URL Video *</label><input type="text" id="videoUrl" required></div>
                 <div class="form-group"><label>URL Thumbnail</label><input type="text" id="videoThumb"></div>
             </div>
+            <!-- ✅ NUEVO: Selector de Tipo de Video -->
+            <div class="form-group">
+                <label>Tipo de Video *</label>
+                <select id="videoTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
+                    <option value="youtube">YouTube</option>
+                    <option value="instagram">Instagram Reel</option>
+                    <option value="facebook">Facebook Reel</option>
+                </select>
+            </div>
             <div class="form-group"><label>Orden</label><input type="number" id="videoOrden" value="1" min="1"></div>
             <button type="submit" class="btn btn-primary">Guardar Video</button>
         </form>
@@ -193,6 +202,15 @@
             <div class="form-row">
                 <div class="form-group"><label>URL Video *</label><input type="text" id="sueltoVideo" required></div>
                 <div class="form-group"><label>URL Thumbnail</label><input type="text" id="sueltoThumb"></div>
+            </div>
+            <!-- ✅ NUEVO: Selector de Tipo de Video -->
+            <div class="form-group">
+                <label>Tipo de Video *</label>
+                <select id="sueltoTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
+                    <option value="youtube">YouTube</option>
+                    <option value="instagram">Instagram Reel</option>
+                    <option value="facebook">Facebook Reel</option>
+                </select>
             </div>
             <div class="form-group"><label>Orden</label><input type="number" id="sueltoOrden" value="1" min="1"></div>
             <button type="submit" class="btn btn-primary">Guardar</button>

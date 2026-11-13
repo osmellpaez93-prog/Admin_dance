@@ -135,7 +135,6 @@ function renderContenido() {
         const nivelesCat = niveles.filter(n => n.categoria_id === cat.id);
         const totalClases = nivelesCat.reduce((sum, n) => sum + clases.filter(c => c.nivel_id === n.id).length, 0);
         
-        // Buscar instructores asignados (pueden ser varios)
         const instructoresCat = instructores.filter(i => cat.instructor_ids?.includes(i.id));
         const nombresInstructores = instructoresCat.length > 0 
             ? instructoresCat.map(i => i.nombre).join(', ') 
@@ -171,12 +170,12 @@ function renderContenido() {
                         <div class="video-item">
                             <div class="video-item-info">
                                 <strong>${v.titulo||'Sin título'}</strong>
-                                <small>${v.video_url?.substring(0,60)||'-'}...</small>
+                                <small>${v.video_url?.substring(0,60)||'-'}... <span style="color:#f59e0b; text-transform:uppercase; font-size:0.8em;">(${v.tipo_video || 'youtube'})</span></small>
                             </div>
                             <div class="video-item-actions">
                                 <button class="btn btn-sm btn-warning" onclick="editVideo('${v.id}')">✏️</button>
                                 <button class="btn btn-sm btn-danger" onclick="delVideo('${v.id}')">🗑️</button>
-                            </div>
+            </div>
                         </div>
                     `).join('') : '<p style="color:#999;text-align:center;padding:1rem;">Sin videos en este nivel</p>'}
                     <button class="add-video-btn" onclick="addVideo('${nivel.id}')">+ Agregar Video a este nivel</button>
@@ -243,8 +242,6 @@ function editCategoria(id) {
 document.getElementById('formCategoria').addEventListener('submit', async e => {
     e.preventDefault();
     const id = document.getElementById('categoriaId').value;
-    
-    // Recoger todos los checkboxes marcados
     const checkedInstructors = Array.from(document.querySelectorAll('.instructor-checkbox:checked')).map(cb => cb.value);
     
     const data = {
@@ -252,7 +249,7 @@ document.getElementById('formCategoria').addEventListener('submit', async e => {
         descripcion: document.getElementById('categoriaDesc').value.trim(),
         thumbnail_url: document.getElementById('categoriaThumbnail').value.trim(),
         orden: parseInt(document.getElementById('categoriaOrden').value) || 0,
-        instructor_ids: checkedInstructors // ✅ Guarda el array de IDs
+        instructor_ids: checkedInstructors
     };
     
     let error;
@@ -328,6 +325,7 @@ function addVideo(nivelId) {
     document.getElementById('videoUrl').value = '';
     document.getElementById('videoThumb').value = '';
     document.getElementById('videoOrden').value = '1';
+    document.getElementById('videoTipo').value = 'youtube'; // ✅ NUEVO
     openModal('modalVideo');
 }
 
@@ -342,6 +340,7 @@ function editVideo(id) {
     document.getElementById('videoUrl').value = v.video_url || '';
     document.getElementById('videoThumb').value = v.thumbnail_url || '';
     document.getElementById('videoOrden').value = v.orden || 1;
+    document.getElementById('videoTipo').value = v.tipo_video || 'youtube'; // ✅ NUEVO
     openModal('modalVideo');
 }
 
@@ -354,7 +353,8 @@ document.getElementById('formVideo').addEventListener('submit', async e => {
         video_url: document.getElementById('videoUrl').value,
         thumbnail_url: document.getElementById('videoThumb').value,
         nivel_id: document.getElementById('videoNivelId').value,
-        orden: parseInt(document.getElementById('videoOrden').value) || 1
+        orden: parseInt(document.getElementById('videoOrden').value) || 1,
+        tipo_video: document.getElementById('videoTipo').value // ✅ NUEVO
     };
     let error = id ? (await db.from('clases').update(data).eq('id', id)).error : (await db.from('clases').insert([data])).error;
     if (error) alert('Error: ' + error.message);
@@ -375,6 +375,7 @@ function renderSueltos() {
         return `<tr>
             <td><strong>${s.titulo||'-'}</strong></td>
             <td><span style="color:#f59e0b;">${categoria ? categoria.nombre : 'Sin asignar'}</span></td>
+            <td><span style="text-transform:capitalize; font-size:0.9em;">${s.tipo_video || 'youtube'}</span></td> <!-- ✅ NUEVO -->
             <td>${s.video_url?.substring(0,40)||'-'}...</td>
             <td>
                 <button class="btn btn-sm btn-warning" onclick="editSuelto('${s.id}')">✏️</button>
@@ -392,6 +393,8 @@ function openModalSuelto() {
     document.getElementById('sueltoVideo').value = '';
     document.getElementById('sueltoThumb').value = '';
     document.getElementById('sueltoOrden').value = '1';
+    document.getElementById('sueltoTipo').value = 'youtube'; // ✅ NUEVO
+    
     const selectCat = document.getElementById('sueltoCategoria');
     selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
     categorias.forEach(cat => { selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`; });
@@ -408,6 +411,8 @@ function editSuelto(id) {
     document.getElementById('sueltoVideo').value = s.video_url || '';
     document.getElementById('sueltoThumb').value = s.thumbnail_url || '';
     document.getElementById('sueltoOrden').value = s.orden || 1;
+    document.getElementById('sueltoTipo').value = s.tipo_video || 'youtube'; // ✅ NUEVO
+    
     const selectCat = document.getElementById('sueltoCategoria');
     selectCat.innerHTML = '<option value="">-- Selecciona un estilo --</option>';
     categorias.forEach(cat => { selectCat.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`; });
@@ -424,7 +429,8 @@ document.getElementById('formSuelto').addEventListener('submit', async e => {
         video_url: document.getElementById('sueltoVideo').value,
         thumbnail_url: document.getElementById('sueltoThumb').value,
         categoria_id: document.getElementById('sueltoCategoria').value || null,
-        orden: parseInt(document.getElementById('sueltoOrden').value) || 1
+        orden: parseInt(document.getElementById('sueltoOrden').value) || 1,
+        tipo_video: document.getElementById('sueltoTipo').value // ✅ NUEVO
     };
     let error = id ? (await db.from('videos_sueltos').update(data).eq('id', id)).error : (await db.from('videos_sueltos').insert([data])).error;
     if (error) alert('Error: ' + error.message);
