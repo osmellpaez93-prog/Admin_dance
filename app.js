@@ -626,4 +626,12 @@ async function saveAllAccess() {
 }
 
 async function del(table, id) {
-    if (!confirm
+    if (!confirm('¿Eliminar?')) return;
+    const { error } = await db.from(table).delete().eq('id', id);
+    if (error) alert('Error: ' + error.message);
+    else loadData();
+}
+
+document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => {
+    if (e.target === m) m.classList.remove('active');
+}));
