@@ -1,311 +1,297 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Ven y Baila Lessons</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0908">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Admin · Ven y Baila Lessons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>🎭 Panel de Administración</h1>
-        <p>Ven y Baila Lessons</p>
-    </div>
-
-    <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="statUsers">0</div><div>Usuarios</div></div>
-        <div class="stat-card"><div class="stat-number" id="statCategorias">0</div><div>Categorías</div></div>
-        <div class="stat-card"><div class="stat-number" id="statClases">0</div><div>Clases</div></div>
-        <div class="stat-card"><div class="stat-number" id="statSueltos">0</div><div>Videos Sueltos</div></div>
-        <div class="stat-card"><div class="stat-number" id="statInstructores">0</div><div>Instructores</div></div>
-    </div>
-
-    <div class="tabs">
-        <button class="tab active" onclick="showTab('usuarios')">👥 Usuarios</button>
-        <button class="tab" onclick="showTab('contenido')">📚 Contenido</button>
-        <button class="tab" onclick="showTab('sueltos')">🎬 Videos Sueltos</button>
-        <button class="tab" onclick="showTab('instructores')">👨‍🏫 Instructores</button>
-        <button class="tab" onclick="showTab('hero')">🎠 Hero / Carrusel</button>
-        <button class="tab" onclick="showTab('nuevo')">➕ Nuevo Usuario</button>
-    </div>
-
-    <!-- USUARIOS -->
-    <div id="tab-usuarios" class="tab-content">
-        <div class="section">
-            <h3>Usuarios</h3>
-            <table>
-                <thead><tr><th>Código</th><th>Nombre</th><th>Teléfono</th><th>Accesos</th><th>Acciones</th></tr></thead>
-                <tbody id="usersTable"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- CONTENIDO -->
-    <div id="tab-contenido" class="tab-content" style="display:none;">
-        <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h3>Contenido por Categoría</h3>
-                <button class="btn btn-success" onclick="openModalCategoria()">+ Nueva Categoría</button>
-            </div>
-            <p style="color:#999; margin-bottom:1rem;">Clic en una categoría para expandir. Desde aquí gestionas materias, niveles y videos.</p>
-            <div id="contenidoJerarquico"></div>
-        </div>
-    </div>
-
-    <!-- VIDEOS SUELTOS -->
-    <div id="tab-sueltos" class="tab-content" style="display:none;">
-        <div class="section">
-            <h3>Videos Sueltos <button class="btn btn-success btn-sm" onclick="openModalSuelto()">+ Nuevo</button></h3>
-            <table>
-                <thead><tr><th>Título</th><th>Estilo</th><th>Tipo</th><th>URL</th><th>Acciones</th></tr></thead>
-                <tbody id="sueltosTable"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- INSTRUCTORES -->
-    <div id="tab-instructores" class="tab-content" style="display:none;">
-        <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h3>Instructores</h3>
-                <button class="btn btn-success" onclick="openModalInstructor()">+ Nuevo Instructor</button>
-            </div>
-            <p style="color:#999; margin-bottom:1rem;">Gestiona los profesores. Podrás asignar uno o varios a cada materia.</p>
-            <table>
-                <thead><tr><th>Nombre</th><th>Especialidad</th><th>Instagram</th><th>Acciones</th></tr></thead>
-                <tbody id="instructoresTable"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- HERO / CARRUSEL -->
-    <div id="tab-hero" class="tab-content" style="display:none;">
-        <div class="section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                <h3>Slides del Hero</h3>
-                <button class="btn btn-success" onclick="openModalHero()">+ Nuevo Slide</button>
-            </div>
-            <p style="color:#999; margin-bottom:1rem;">Gestiona las diapositivas del carrusel principal. Ordena con el campo "Orden". Desactiva los que no quieras mostrar.</p>
-            <table>
-                <thead><tr><th>Título</th><th>Tipo</th><th>Badge</th><th>Orden</th><th>Activo</th><th>Acciones</th></tr></thead>
-                <tbody id="heroTable"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- NUEVO USUARIO -->
-    <div id="tab-nuevo" class="tab-content" style="display:none;">
-        <div class="section">
-            <h3>Crear Usuario</h3>
-            <div id="newUserMsg" class="message"></div>
-            <form id="newUserForm">
-                <div class="form-row">
-                    <div class="form-group"><label>Nombre</label><input type="text" id="newUserName" required></div>
-                    <div class="form-group"><label>Teléfono</label><input type="tel" id="newUserPhone" required></div>
-                </div>
-                <button type="submit" class="btn btn-primary">Generar Código</button>
-            </form>
-        </div>
-    </div>
+<div class="boot" id="boot">
+  <div class="boot-mark">Ven y Baila <em>Lessons</em></div>
+  <div class="boot-bar"><span></span></div>
+  <p>Preparando el panel…</p>
 </div>
 
-<!-- MODAL: CATEGORÍA -->
-<div id="modalCategoria" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="categoriaModalTitle">Nueva Categoría</h3>
-            <button class="close-btn" onclick="closeModal('modalCategoria')">&times;</button>
-        </div>
-        <form id="formCategoria">
-            <input type="hidden" id="categoriaId">
-            <div class="form-group"><label>Nombre *</label><input type="text" id="categoriaNombre" placeholder="Ej: Salsa, Bachata..." required></div>
-            <div class="form-group"><label>Descripción</label><textarea id="categoriaDesc" rows="3"></textarea></div>
-            <div class="form-group"><label>URL de Imagen/Video</label><input type="text" id="categoriaThumbnail" placeholder="https://..."></div>
-            <div class="form-group">
-                <label>Instructores</label>
-                <div id="categoriaInstructoresCheckboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #444; padding: 10px; border-radius: 6px; background: #1a1a1a;"></div>
-                <small style="color:#999; font-size:0.8rem;">Selecciona uno o más profesores</small>
-            </div>
-            <div class="form-group"><label>Orden</label><input type="number" id="categoriaOrden" placeholder="0" min="0"></div>
-            <button type="submit" class="btn btn-primary">Guardar Categoría</button>
-        </form>
-    </div>
+<header class="topbar">
+  <div class="brand">
+    <h1 class="brand-title">Ven y Baila <em>Lessons</em></h1>
+    <span class="chip chip-admin">Admin</span>
+  </div>
+  <button class="icon-btn" id="btnRefresh" title="Recargar datos" aria-label="Recargar datos">
+    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+  </button>
+</header>
+
+<div class="stats" id="stats">
+  <div class="stat"><b id="statUsers">0</b><span>Usuarios</span></div>
+  <div class="stat"><b id="statCategorias">0</b><span>Categorías</span></div>
+  <div class="stat"><b id="statClases">0</b><span>Clases</span></div>
+  <div class="stat"><b id="statSueltos">0</b><span>Sueltos</span></div>
+  <div class="stat"><b id="statInstructores">0</b><span>Maestros</span></div>
+  <div class="stat"><b id="statSlides">0</b><span>Slides</span></div>
 </div>
 
-<!-- MODAL: NIVEL -->
-<div id="modalNivel" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="nivelModalTitle">Nuevo Nivel</h3>
-            <button class="close-btn" onclick="closeModal('modalNivel')">&times;</button>
-        </div>
-        <form id="formNivel">
-            <input type="hidden" id="nivelId"><input type="hidden" id="nivelCategoriaId">
-            <div class="form-group"><label>Nombre *</label><input type="text" id="nivelNombre" required></div>
-            <div class="form-group"><label>Descripción</label><textarea id="nivelDesc" rows="3"></textarea></div>
-            <div class="form-group"><label>Orden</label><input type="number" id="nivelOrden" value="1" min="1"></div>
-            <button type="submit" class="btn btn-primary">Guardar Nivel</button>
-        </form>
+<nav class="tabs" id="tabs" aria-label="Secciones">
+  <button class="tab active" data-tab="usuarios" onclick="showTab('usuarios')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Usuarios</button>
+  <button class="tab" data-tab="contenido" onclick="showTab('contenido')"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15z"/></svg>Contenido</button>
+  <button class="tab" data-tab="sueltos" onclick="showTab('sueltos')"><svg viewBox="0 0 24 24"><path d="m23 7-7 5 7 5V7zM1 5h14v14H1z"/></svg>Sueltos</button>
+  <button class="tab" data-tab="instructores" onclick="showTab('instructores')"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8"/></svg>Maestros</button>
+  <button class="tab" data-tab="hero" onclick="showTab('hero')"><svg viewBox="0 0 24 24"><path d="M2 3h20v14H2zM8 21h8M12 17v4"/></svg>Carrusel</button>
+  <button class="tab" data-tab="nuevo" onclick="showTab('nuevo')"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuevo</button>
+</nav>
+
+<main class="wrap">
+
+  <!-- USUARIOS -->
+  <section id="tab-usuarios" class="panel">
+    <div class="panel-head">
+      <div><h2>Alumnos</h2><p class="panel-sub">Códigos de acceso y permisos por nivel</p></div>
     </div>
+    <div class="toolbar">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="qUsuarios" type="search" placeholder="Buscar nombre, código o teléfono…" autocomplete="off"></label>
+      <select id="sortUsuarios" class="select" aria-label="Ordenar usuarios">
+        <option value="nombre">A → Z</option>
+        <option value="codigo">Código</option>
+        <option value="accesos">Más accesos</option>
+      </select>
+    </div>
+    <div id="usersTable" class="stack"></div>
+  </section>
+
+  <!-- CONTENIDO -->
+  <section id="tab-contenido" class="panel" hidden>
+    <div class="panel-head">
+      <div><h2>Biblioteca</h2><p class="panel-sub">Categorías → niveles → clases</p></div>
+      <button class="btn btn-primary" onclick="openModalCategoria()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Categoría</button>
+    </div>
+    <div class="toolbar">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="qContenido" type="search" placeholder="Buscar categoría, nivel o clase…" autocomplete="off"></label>
+    </div>
+    <div id="contenidoJerarquico" class="acc-list"></div>
+  </section>
+
+  <!-- SUELTOS -->
+  <section id="tab-sueltos" class="panel" hidden>
+    <div class="panel-head">
+      <div><h2>Videos sueltos</h2><p class="panel-sub">Contenido gratuito abierto a todos</p></div>
+      <button class="btn btn-primary" onclick="openModalSuelto()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Video</button>
+    </div>
+    <div class="toolbar">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="qSueltos" type="search" placeholder="Buscar título o estilo…" autocomplete="off"></label>
+      <select id="sortSueltos" class="select" aria-label="Ordenar sueltos">
+        <option value="orden">Orden</option>
+        <option value="titulo">A → Z</option>
+      </select>
+    </div>
+    <div id="sueltosTable" class="stack"></div>
+  </section>
+
+  <!-- INSTRUCTORES -->
+  <section id="tab-instructores" class="panel" hidden>
+    <div class="panel-head">
+      <div><h2>Maestros</h2><p class="panel-sub">El equipo que aparece en la web</p></div>
+      <button class="btn btn-primary" onclick="openModalInstructor()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Maestro</button>
+    </div>
+    <div class="toolbar">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="qInstructores" type="search" placeholder="Buscar nombre o especialidad…" autocomplete="off"></label>
+      <select id="sortInstructores" class="select" aria-label="Ordenar maestros">
+        <option value="orden">Orden</option>
+        <option value="nombre">A → Z</option>
+      </select>
+    </div>
+    <div id="instructoresTable" class="stack"></div>
+  </section>
+
+  <!-- HERO -->
+  <section id="tab-hero" class="panel" hidden>
+    <div class="panel-head">
+      <div><h2>Carrusel</h2><p class="panel-sub">Promos y novedades de la home y del panel</p></div>
+      <button class="btn btn-primary" onclick="openModalHero()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Slide</button>
+    </div>
+    <div class="toolbar">
+      <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="qHero" type="search" placeholder="Buscar título o badge…" autocomplete="off"></label>
+      <select id="sortHero" class="select" aria-label="Ordenar slides">
+        <option value="orden">Orden</option>
+        <option value="titulo">A → Z</option>
+      </select>
+    </div>
+    <div id="heroTable" class="stack"></div>
+  </section>
+
+  <!-- NUEVO USUARIO -->
+  <section id="tab-nuevo" class="panel" hidden>
+    <div class="panel-head"><div><h2>Nuevo alumno</h2><p class="panel-sub">Genera un código único de acceso</p></div></div>
+    <form id="newUserForm" class="card form-card">
+      <div class="field"><label for="newUserName">Nombre completo</label><input type="text" id="newUserName" required placeholder="Ej: Laura Gómez" autocomplete="off"></div>
+      <div class="field"><label for="newUserPhone">Teléfono</label><input type="tel" id="newUserPhone" required placeholder="+34 600 000 000" autocomplete="off"></div>
+      <div id="newUserMsg" class="message" hidden></div>
+      <div id="codeBox" class="code-box" hidden>
+        <span class="code-label">Código de acceso</span>
+        <strong id="codeValue" class="code-value">SM00000</strong>
+        <button type="button" class="btn btn-ghost" id="btnCopyCode"><svg viewBox="0 0 24 24"><path d="M20 9h-9a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copiar</button>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Generar código</button>
+    </form>
+  </section>
+
+</main>
+
+<!-- ===== MODALES ===== -->
+<div id="modalCategoria" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="categoriaModalTitle">Nueva categoría</h3><button class="icon-btn" onclick="closeModal('modalCategoria')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formCategoria" class="sheet-body">
+      <input type="hidden" id="categoriaId">
+      <div class="field"><label>Nombre *</label><input type="text" id="categoriaNombre" required placeholder="Salsa, Bachata, Kizomba…"></div>
+      <div class="field"><label>Descripción</label><textarea id="categoriaDesc" rows="3"></textarea></div>
+      <div class="field"><label>URL imagen / vídeo</label><input type="text" id="categoriaThumbnail" placeholder="https://…"></div>
+      <div class="field"><label>Maestros</label><div id="categoriaInstructoresCheckboxes" class="check-grid"></div></div>
+      <div class="field"><label>Orden</label><input type="number" id="categoriaOrden" min="0" value="0"></div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar categoría</button>
+    </form>
+  </div>
 </div>
 
-<!-- MODAL: VIDEO (CLASES) -->
-<div id="modalVideo" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="videoModalTitle">Video</h3>
-            <button class="close-btn" onclick="closeModal('modalVideo')">&times;</button>
-        </div>
-        <form id="formVideo">
-            <input type="hidden" id="videoId"><input type="hidden" id="videoNivelId">
-            <div class="form-group"><label>Título *</label><input type="text" id="videoTitulo" required></div>
-            <div class="form-group"><label>Descripción</label><textarea id="videoDesc" rows="3"></textarea></div>
-            <div class="form-row">
-                <div class="form-group"><label>URL Video *</label><input type="text" id="videoUrl" required></div>
-                <div class="form-group"><label>URL Thumbnail</label><input type="text" id="videoThumb"></div>
-            </div>
-            <div class="form-group">
-                <label>Tipo de Video *</label>
-                <select id="videoTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
-                    <option value="youtube">YouTube</option><option value="mp4">Video MP4 (Bunny)</option>
-                    <option value="hls">Stream HLS (Bunny)</option><option value="instagram">Instagram Reel</option><option value="facebook">Facebook Reel</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Orden</label><input type="number" id="videoOrden" value="1" min="1"></div>
-            <button type="submit" class="btn btn-primary">Guardar Video</button>
-        </form>
-    </div>
+<div id="modalNivel" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="nivelModalTitle">Nuevo nivel</h3><button class="icon-btn" onclick="closeModal('modalNivel')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formNivel" class="sheet-body">
+      <input type="hidden" id="nivelId"><input type="hidden" id="nivelCategoriaId">
+      <div class="field"><label>Nombre *</label><input type="text" id="nivelNombre" required placeholder="Beginner 0, Intermedio…"></div>
+      <div class="field"><label>Descripción</label><textarea id="nivelDesc" rows="3"></textarea></div>
+      <div class="field"><label>Orden</label><input type="number" id="nivelOrden" min="1" value="1"></div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar nivel</button>
+    </form>
+  </div>
 </div>
 
-<!-- MODAL: VIDEO SUELTO -->
-<div id="modalSuelto" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="sueltoModalTitle">Video Suelto</h3>
-            <button class="close-btn" onclick="closeModal('modalSuelto')">&times;</button>
-        </div>
-        <form id="formSuelto">
-            <input type="hidden" id="sueltoId">
-            <div class="form-group">
-                <label>Estilo / Categoría *</label>
-                <select id="sueltoCategoria" required><option value="">-- Selecciona un estilo --</option></select>
-            </div>
-            <div class="form-group"><label>Título *</label><input type="text" id="sueltoTitulo" required></div>
-            <div class="form-group"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
-            <div class="form-row">
-                <div class="form-group"><label>URL Video *</label><input type="text" id="sueltoVideo" required></div>
-                <div class="form-group"><label>URL Thumbnail</label><input type="text" id="sueltoThumb"></div>
-            </div>
-            <div class="form-group">
-                <label>Tipo de Video *</label>
-                <select id="sueltoTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
-                    <option value="youtube">YouTube</option><option value="mp4">Video MP4 (Bunny)</option>
-                    <option value="hls">Stream HLS (Bunny)</option><option value="instagram">Instagram Reel</option><option value="facebook">Facebook Reel</option>
-                </select>
-            </div>
-            <div class="form-group"><label>Orden</label><input type="number" id="sueltoOrden" value="1" min="1"></div>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </form>
-    </div>
+<div id="modalVideo" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="videoModalTitle">Clase</h3><button class="icon-btn" onclick="closeModal('modalVideo')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formVideo" class="sheet-body">
+      <input type="hidden" id="videoId"><input type="hidden" id="videoNivelId">
+      <div class="field"><label>Título *</label><input type="text" id="videoTitulo" required></div>
+      <div class="field"><label>Descripción</label><textarea id="videoDesc" rows="3"></textarea></div>
+      <div class="field"><label>URL vídeo *</label><input type="text" id="videoUrl" required placeholder="YouTube, Shorts, mp4, HLS…"></div>
+      <div class="field"><label>URL miniatura</label><input type="text" id="videoThumb" placeholder="https://…jpg"></div>
+      <div class="field"><label>Tipo *</label>
+        <select id="videoTipo" class="select" required>
+          <option value="youtube">YouTube / Shorts</option>
+          <option value="mp4">MP4 (Bunny / directo)</option>
+          <option value="hls">Stream HLS (Bunny)</option>
+          <option value="instagram">Instagram Reel</option>
+          <option value="facebook">Facebook Reel</option>
+        </select>
+      </div>
+      <div class="field"><label>Orden</label><input type="number" id="videoOrden" min="1" value="1"></div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar clase</button>
+    </form>
+  </div>
 </div>
 
-<!-- MODAL: INSTRUCTOR -->
-<div id="modalInstructor" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="instructorModalTitle">Nuevo Instructor</h3>
-            <button class="close-btn" onclick="closeModal('modalInstructor')">&times;</button>
-        </div>
-        <form id="formInstructor">
-            <input type="hidden" id="instructorId">
-            <div class="form-group"><label>Nombre *</label><input type="text" id="instructorNombre" required></div>
-            <div class="form-group"><label>Especialidad</label><input type="text" id="instructorEspecialidad"></div>
-            <div class="form-group"><label>URL Imagen</label><input type="text" id="instructorImagen"></div>
-            <div class="form-group"><label>Instagram URL</label><input type="text" id="instructorInstagram"></div>
-            <div class="form-group"><label>Biografía</label><textarea id="instructorBio" rows="3"></textarea></div>
-            <div class="form-group"><label>Orden</label><input type="number" id="instructorOrden" value="0" min="0"></div>
-            <button type="submit" class="btn btn-primary">Guardar Instructor</button>
-        </form>
-    </div>
+<div id="modalSuelto" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="sueltoModalTitle">Video suelto</h3><button class="icon-btn" onclick="closeModal('modalSuelto')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formSuelto" class="sheet-body">
+      <input type="hidden" id="sueltoId">
+      <div class="field"><label>Estilo *</label><select id="sueltoCategoria" class="select" required><option value="">— Selecciona —</option></select></div>
+      <div class="field"><label>Título *</label><input type="text" id="sueltoTitulo" required></div>
+      <div class="field"><label>Descripción</label><textarea id="sueltoDesc" rows="3"></textarea></div>
+      <div class="field"><label>URL vídeo *</label><input type="text" id="sueltoVideo" required></div>
+      <div class="field"><label>URL miniatura</label><input type="text" id="sueltoThumb"></div>
+      <div class="field"><label>Tipo *</label>
+        <select id="sueltoTipo" class="select" required>
+          <option value="youtube">YouTube / Shorts</option>
+          <option value="mp4">MP4 (Bunny / directo)</option>
+          <option value="hls">Stream HLS (Bunny)</option>
+          <option value="instagram">Instagram Reel</option>
+          <option value="facebook">Facebook Reel</option>
+        </select>
+      </div>
+      <div class="field"><label>Orden</label><input type="number" id="sueltoOrden" min="1" value="1"></div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar video</button>
+    </form>
+  </div>
 </div>
 
-<!-- MODAL: HERO / CARRUSEL -->
-<div id="modalHero" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="heroModalTitle">Nuevo Slide</h3>
-            <button class="close-btn" onclick="closeModal('modalHero')">&times;</button>
-        </div>
-        <form id="formHero">
-            <input type="hidden" id="heroId">
-            <div class="form-group"><label>Título *</label><input type="text" id="heroTitulo" required></div>
-            <div class="form-row">
-                <div class="form-group"><label>Subtítulo</label><input type="text" id="heroSubtitulo"></div>
-                <div class="form-group"><label>Badge</label><input type="text" id="heroBadge" placeholder="Próximamente, Nuevo..."></div>
-            </div>
-            <div class="form-group"><label>Descripción</label><textarea id="heroDesc" rows="3"></textarea></div>
-            <div class="form-group">
-                <label>Tipo de medio *</label>
-                <select id="heroTipo" required style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
-                    <option value="imagen">Imagen de fondo</option>
-                    <option value="video">Video de fondo</option>
-                </select>
-            </div>
-            <div class="form-group"><label>URL Imagen</label><input type="text" id="heroImagen" placeholder="https://... o /imagen.jpg"></div>
-            <div class="form-group"><label>URL Video</label><input type="text" id="heroVideo" placeholder="https://...mp4"></div>
-            <div class="form-row">
-                <div class="form-group"><label>Texto botón</label><input type="text" id="heroBotonTexto"></div>
-                <div class="form-group"><label>URL botón</label><input type="text" id="heroBotonUrl" placeholder="#videos o https://..."></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>Orden</label><input type="number" id="heroOrden" value="1" min="1"></div>
-                <div class="form-group">
-                    <label>Activo</label>
-                    <select id="heroActivo" style="width:100%; padding:8px; border-radius:4px; border:1px solid #444; background:#222; color:white;">
-                        <option value="true">Sí (visible)</option>
-                        <option value="false">No (oculto)</option>
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Guardar Slide</button>
-        </form>
-    </div>
+<div id="modalInstructor" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="instructorModalTitle">Nuevo maestro</h3><button class="icon-btn" onclick="closeModal('modalInstructor')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formInstructor" class="sheet-body">
+      <input type="hidden" id="instructorId">
+      <div class="field"><label>Nombre *</label><input type="text" id="instructorNombre" required></div>
+      <div class="field"><label>Especialidad</label><input type="text" id="instructorEspecialidad" placeholder="Salsa, Bachata…"></div>
+      <div class="field"><label>URL imagen</label><input type="text" id="instructorImagen" placeholder="https://… o /mell.jpg"></div>
+      <div class="field"><label>Instagram</label><input type="text" id="instructorInstagram" placeholder="https://instagram.com/…"></div>
+      <div class="field"><label>Biografía</label><textarea id="instructorBio" rows="3"></textarea></div>
+      <div class="field"><label>Orden</label><input type="number" id="instructorOrden" min="0" value="0"></div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar maestro</button>
+    </form>
+  </div>
 </div>
 
-<!-- MODAL: EDITAR USUARIO -->
-<div id="modalEditUser" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Editar Usuario</h3>
-            <button class="close-btn" onclick="closeModal('modalEditUser')">&times;</button>
-        </div>
-        <form id="formEditUser">
-            <input type="hidden" id="editUserId">
-            <div class="form-group"><label>Código</label><input type="text" id="editUserCode" disabled></div>
-            <div class="form-group"><label>Nombre</label><input type="text" id="editUserName" required></div>
-            <div class="form-group"><label>Teléfono</label><input type="tel" id="editUserPhone" required></div>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </form>
-    </div>
+<div id="modalHero" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="heroModalTitle">Nuevo slide</h3><button class="icon-btn" onclick="closeModal('modalHero')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formHero" class="sheet-body">
+      <input type="hidden" id="heroId">
+      <div class="field"><label>Título *</label><input type="text" id="heroTitulo" required></div>
+      <div class="grid-2">
+        <div class="field"><label>Subtítulo</label><input type="text" id="heroSubtitulo"></div>
+        <div class="field"><label>Badge</label><input type="text" id="heroBadge" placeholder="Nuevo, Próximamente…"></div>
+      </div>
+      <div class="field"><label>Descripción</label><textarea id="heroDesc" rows="3"></textarea></div>
+      <div class="field"><label>Tipo de medio *</label>
+        <select id="heroTipo" class="select" required><option value="imagen">Imagen de fondo</option><option value="video">Vídeo de fondo</option></select>
+      </div>
+      <div class="field"><label>URL imagen</label><input type="text" id="heroImagen" placeholder="https://…"></div>
+      <div class="field"><label>URL vídeo</label><input type="text" id="heroVideo" placeholder="YouTube / Shorts / mp4"></div>
+      <div class="grid-2">
+        <div class="field"><label>Texto botón</label><input type="text" id="heroBotonTexto"></div>
+        <div class="field"><label>URL botón</label><input type="text" id="heroBotonUrl" placeholder="#videos o https://…"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Orden</label><input type="number" id="heroOrden" min="1" value="1"></div>
+        <div class="field"><label>Visible</label><select id="heroActivo" class="select"><option value="true">Sí, publicado</option><option value="false">No, oculto</option></select></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar slide</button>
+    </form>
+  </div>
 </div>
 
-<!-- MODAL: ACCESOS -->
-<div id="modalAccesos" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="accesosTitle">Gestionar Accesos</h3>
-            <button class="close-btn" onclick="closeModal('modalAccesos')">&times;</button>
-        </div>
-        <div id="accesosInfo"></div>
-        <h4 style="color:#f59e0b; margin:1rem 0 0.5rem;">Selecciona los niveles con acceso</h4>
-        <div id="accesosPorCategoria"></div>
-        <div style="margin-top:1rem; text-align:right;">
-            <button class="btn btn-primary" onclick="saveAllAccess()">Guardar Cambios</button>
-        </div>
-    </div>
+<div id="modalEditUser" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3>Editar alumno</h3><button class="icon-btn" onclick="closeModal('modalEditUser')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <form id="formEditUser" class="sheet-body">
+      <input type="hidden" id="editUserId">
+      <div class="field"><label>Código</label><input type="text" id="editUserCode" disabled></div>
+      <div class="field"><label>Nombre</label><input type="text" id="editUserName" required></div>
+      <div class="field"><label>Teléfono</label><input type="tel" id="editUserPhone" required></div>
+      <button type="submit" class="btn btn-primary btn-block">Guardar cambios</button>
+    </form>
+  </div>
 </div>
+
+<div id="modalAccesos" class="modal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div class="sheet-head"><h3 id="accesosTitle">Accesos</h3><button class="icon-btn" onclick="closeModal('modalAccesos')" aria-label="Cerrar"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="sheet-body">
+      <div id="accesosInfo" class="access-info"></div>
+      <div id="accesosPorCategoria" class="access-groups"></div>
+      <button class="btn btn-primary btn-block" onclick="saveAllAccess()">Guardar accesos</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="app.js"></script>
