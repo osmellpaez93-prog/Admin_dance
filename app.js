@@ -13,9 +13,13 @@ const sort = { usuarios: 'nombre', sueltos: 'orden', instructores: 'orden', hero
 const HERO_BUCKET = 'hero';
 const HERO_MAX_BYTES = 5 * 1024 * 1024;
 const HERO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-let heroSessionPath = null;   // objeto subido durante esta apertura del modal
-let heroExistingPath = null;  // objeto ya publicado que se está editando
-let heroPreviewUrl = null;    // objectURL local de la vista previa
+let heroSessionPath = null;
+let heroExistingPath = null;
+let heroPreviewUrl = null;
+
+// ================= ENCUADRE =================
+const crop = { x: 50, y: 35, z: 1, pointers: new Map(), pinchDist: 0, pinchZ: 1, dragging: false, lastX: 0, lastY: 0 };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 // ================= ICONOS =================
 const I = {
@@ -379,6 +383,7 @@ function renderHeroSlides() {
       <div class="meta"><span class="badge badge-info">${s.tipo_medio === 'video' ? 'Vídeo' : 'Imagen'}</span>
       ${s.badge ? `<span class="badge badge-amber">${esc(s.badge)}</span>` : ''}
       <span class="meta-item"><span class="dot ${s.activo ? 'dot-on' : 'dot-off'}"></span>${s.activo ? 'Publicado' : 'Oculto'}</span>
+      ${(s.zoom || 1) > 1.01 ? `<span class="badge badge-mag">${Number(s.zoom).toFixed(1)}×</span>` : ''}
       <span class="badge">#${s.orden || 1}</span></div></div>
       <div class="item-actions">
         <button class="btn btn-ghost btn-sm" onclick="editHero('${s.id}')">${I.edit}</button>
@@ -394,6 +399,8 @@ function openModalHero() {
   $('heroOrden').value = '1';
   $('heroActivo').value = 'true';
   heroResetUpload();
+  cropLoad(null);
+  cropSetSource('');
   openModal('modalHero');
 }
 function editHero(id) {
@@ -412,9 +419,13 @@ function editHero(id) {
   $('heroOrden').value = s.orden || 1;
   $('heroActivo').value = String(s.activo !== false);
   heroResetUpload();
+  cropLoad(s);
   if (s.imagen_url) {
     heroExistingPath = heroPathFromUrl(s.imagen_url);
     heroPreviewFromUrl(s.imagen_url, (s.imagen_url.split('/').pop() || 'foto').slice(0, 40), 'Publicada');
+    cropSetSource(s.imagen_url);
+  } else {
+    cropSetSource('');
   }
   openModal('modalHero');
 }
@@ -517,9 +528,10 @@ async function handleHeroFile(file) {
     $('heroImagen').value = data.publicUrl;
     heroPreviewUrl = URL.createObjectURL(blob);
     heroPreviewFromUrl(heroPreviewUrl, path.split('/').pop(), `${Math.max(1, Math.round(blob.size / 1024))} KB · optimizada`);
+    cropSetSource(heroPreviewUrl);
     heroShowProgress(true, 100, 'Foto lista');
     setTimeout(() => heroShowProgress(false), 900);
-    notify('Foto subida y optimizada', 'ok');
+    notify('Foto subida. Arrástrala en el encuadre para colocarla.', 'ok');
   } catch (err) {
     heroShowProgress(false);
     $('heroDrop').hidden = false;
@@ -539,7 +551,49 @@ async function removeHeroPhoto() {
   heroShowError('');
   heroShowProgress(false);
   $('heroDrop').hidden = false;
+  cropSetSource('');
   notify('Foto quitada del slide', 'info');
+}
+
+// ================= ENCUADRE: RENDER =================
+function cropMetrics() {
+  const vp = $('cropViewport'), img = $('cropImg');
+  const r = vp.getBoundingClientRect();
+  const nw = img.naturalWidth || 1, nh = img.naturalHeight || 1;
+  const cover = Math.max(r.width / nw, r.height / nh);
+  return { vw: r.width, vh: r.height, iw: nw * cover * crop.z, ih: nh * cover * crop.z };
+}
+function cropRender() {
+  const img = $('cropImg');
+  img.style.objectPosition = `${crop.x}% ${crop.y}%`;
+  img.style.transform = `scale(${crop.z})`;
+  img.style.transformOrigin = `${crop.x}% ${crop.y}%`;
+  $('cropZoom').value = String(crop.z);
+  $('cropRead').textContent = `X ${Math.round(crop.x)}% · Y ${Math.round(crop.y)}% · ${crop.z.toFixed(1)}×`;
+  $('heroFocoX').value = String(Math.round(crop.x));
+  $('heroFocoY').value = String(Math.round(crop.y));
+  $('heroZoom').value = crop.z.toFixed(2);
+}
+function cropSetSource(url) {
+  const field = $('cropField');
+  if (!url) { field.hidden = true; return; }
+  field.hidden = false;
+  const img = $('cropImg');
+  if (img.getAttribute('src') !== url) img.src = url;
+  $('cropViewport').classList.remove('used');
+  cropRender();
+  cropNote();
+}
+function cropLoad(s) {
+  crop.x = clamp(Number(s?.foco_x ?? 50) || 50, 0, 100);
+  crop.y = clamp(Number(s?.foco_y ?? 35) || 35, 0, 100);
+  crop.z = clamp(parseFloat(s?.zoom ?? 1) || 1, 1, 4);
+  cropRender();
+}
+function cropReset() { crop.x = 50; crop.y = 35; crop.z = 1; cropRender(); }
+function cropNote() {
+  const esYoutube = /youtube\.com|youtu\.be/i.test($('heroVideo').value.trim());
+  $('cropNote').hidden = !($('heroTipo').value === 'video' && esYoutube);
 }
 
 // ================= ACCESOS =================
@@ -692,16 +746,20 @@ $('formHero').addEventListener('submit', e => {
     boton_texto: $('heroBotonTexto').value.trim(),
     boton_url: $('heroBotonUrl').value.trim(),
     orden: parseInt($('heroOrden').value) || 1,
-    activo: $('heroActivo').value === 'true'
+    activo: $('heroActivo').value === 'true',
+    foco_x: clamp(parseInt($('heroFocoX').value) || 50, 0, 100),
+    foco_y: clamp(parseInt($('heroFocoY').value) || 35, 0, 100),
+    zoom: clamp(parseFloat($('heroZoom').value) || 1, 1, 4)
   }, 'modalHero');
 });
 
-// ================= BUSCADORES / ORDEN / SUBIDA / INIT =================
+// ================= BUSCADORES / ORDEN =================
 [['qUsuarios', 'usuarios', renderUsers], ['qContenido', 'contenido', renderContenido], ['qSueltos', 'sueltos', renderSueltos], ['qInstructores', 'instructores', renderInstructores], ['qHero', 'hero', renderHeroSlides]]
   .forEach(([id, key, fn]) => $(id).addEventListener('input', e => { q[key] = e.target.value; fn(); }));
 [['sortUsuarios', 'usuarios', renderUsers], ['sortSueltos', 'sueltos', renderSueltos], ['sortInstructores', 'instructores', renderInstructores], ['sortHero', 'hero', renderHeroSlides]]
   .forEach(([id, key, fn]) => $(id).addEventListener('change', e => { sort[key] = e.target.value; fn(); }));
 
+// ================= SUBIDA: EVENTOS =================
 const heroDrop = $('heroDrop'), heroFile = $('heroFile');
 heroDrop.addEventListener('click', () => heroFile.click());
 heroDrop.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); heroFile.click(); } });
@@ -712,6 +770,87 @@ heroFile.addEventListener('change', () => { handleHeroFile(heroFile.files[0]); h
 $('heroChange').addEventListener('click', () => heroFile.click());
 $('heroRemove').addEventListener('click', removeHeroPhoto);
 
+// ================= ENCUADRE: EVENTOS =================
+const cropVp = $('cropViewport');
+$('cropImg').addEventListener('load', cropRender);
+cropVp.addEventListener('pointerdown', e => {
+  cropVp.setPointerCapture(e.pointerId);
+  crop.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (crop.pointers.size === 1) {
+    crop.dragging = true; crop.lastX = e.clientX; crop.lastY = e.clientY;
+    cropVp.classList.add('grabbing', 'used');
+  } else if (crop.pointers.size === 2) {
+    const [a, b] = [...crop.pointers.values()];
+    crop.pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+    crop.pinchZ = crop.z;
+    crop.dragging = false;
+  }
+});
+cropVp.addEventListener('pointermove', e => {
+  if (!crop.pointers.has(e.pointerId)) return;
+  crop.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (crop.pointers.size === 2) {
+    const [a, b] = [...crop.pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (crop.pinchDist > 0) { crop.z = clamp(crop.pinchZ * (d / crop.pinchDist), 1, 4); cropRender(); }
+    return;
+  }
+  if (!crop.dragging) return;
+  const dx = e.clientX - crop.lastX, dy = e.clientY - crop.lastY;
+  crop.lastX = e.clientX; crop.lastY = e.clientY;
+  const m = cropMetrics();
+  if (m.iw > m.vw + 0.5) crop.x = clamp(crop.x - dx * 100 / (m.iw - m.vw), 0, 100);
+  if (m.ih > m.vh + 0.5) crop.y = clamp(crop.y - dy * 100 / (m.ih - m.vh), 0, 100);
+  cropRender();
+});
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => cropVp.addEventListener(ev, e => {
+  crop.pointers.delete(e.pointerId);
+  if (crop.pointers.size < 2) crop.pinchDist = 0;
+  if (crop.pointers.size === 0) { crop.dragging = false; cropVp.classList.remove('grabbing'); }
+}));
+cropVp.addEventListener('wheel', e => {
+  e.preventDefault();
+  crop.z = clamp(crop.z * (e.deltaY < 0 ? 1.12 : 0.9), 1, 4);
+  cropVp.classList.add('used');
+  cropRender();
+}, { passive: false });
+cropVp.addEventListener('keydown', e => {
+  const step = e.shiftKey ? 6 : 2;
+  if (e.key === 'ArrowLeft') { crop.x = clamp(crop.x - step, 0, 100); }
+  else if (e.key === 'ArrowRight') { crop.x = clamp(crop.x + step, 0, 100); }
+  else if (e.key === 'ArrowUp') { crop.y = clamp(crop.y - step, 0, 100); }
+  else if (e.key === 'ArrowDown') { crop.y = clamp(crop.y + step, 0, 100); }
+  else if (e.key === '+' || e.key === '=') { crop.z = clamp(crop.z + 0.1, 1, 4); }
+  else if (e.key === '-' || e.key === '_') { crop.z = clamp(crop.z - 0.1, 1, 4); }
+  else if (e.key === '0') { cropReset(); }
+  else return;
+  e.preventDefault();
+  cropVp.classList.add('used');
+  cropRender();
+});
+$('cropZoom').addEventListener('input', e => { crop.z = clamp(parseFloat(e.target.value) || 1, 1, 4); cropVp.classList.add('used'); cropRender(); });
+$('cropReset').addEventListener('click', () => { cropReset(); notify('Encuadre restablecido', 'info'); });
+$('cropGridBtn').addEventListener('click', e => {
+  const grid = $('cropGrid');
+  grid.hidden = !grid.hidden;
+  e.currentTarget.setAttribute('aria-pressed', String(!grid.hidden));
+});
+document.querySelectorAll('.crop-aspects .crop-chip').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.crop-aspects .crop-chip').forEach(b => b.classList.toggle('on', b === btn));
+  cropVp.classList.toggle('tall', btn.dataset.aspect === 'tall');
+  requestAnimationFrame(cropRender);
+}));
+document.querySelectorAll('.crop-presets .crop-chip').forEach(btn => btn.addEventListener('click', () => {
+  crop.y = clamp(Number(btn.dataset.y) || 50, 0, 100);
+  cropVp.classList.add('used');
+  cropRender();
+}));
+$('heroTipo').addEventListener('change', cropNote);
+$('heroVideo').addEventListener('input', cropNote);
+$('heroImagen').addEventListener('input', e => cropSetSource(e.target.value.trim()));
+window.addEventListener('resize', () => { if (!$('cropField').hidden) cropRender(); });
+
+// ================= INIT =================
 $('btnRefresh').addEventListener('click', () => { loadData(); notify('Datos recargados', 'info'); });
 document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
 document.addEventListener('keydown', e => {

@@ -282,6 +282,42 @@
         </div>
       </div>
 
+      <!-- ===== EDITOR DE ENCUADRE (arrastrar + zoom, estilo WhatsApp) ===== -->
+      <div class="field" id="cropField" hidden>
+        <label>Encuadre · arrastra para mover · rueda o pellizca para zoom</label>
+        <div class="crop">
+          <div class="crop-viewport" id="cropViewport" tabindex="0" role="application" aria-label="Editor de encuadre: arrastra para mover la foto, usa más y menos para el zoom">
+            <img id="cropImg" alt="" draggable="false">
+            <div class="crop-grid" id="cropGrid" hidden></div>
+            <span class="crop-hint" id="cropHint">Arrastra la foto para colocarla</span>
+          </div>
+          <div class="crop-bar">
+            <div class="crop-aspects" role="group" aria-label="Forma de la vista previa">
+              <button type="button" class="crop-chip on" data-aspect="wide">Escritorio</button>
+              <button type="button" class="crop-chip" data-aspect="tall">Móvil</button>
+            </div>
+            <label class="crop-zoom" title="Zoom">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35M11 8v6M8 11h6"/></svg>
+              <input type="range" id="cropZoom" min="1" max="4" step="0.05" value="1" aria-label="Zoom del encuadre">
+            </label>
+            <div class="crop-tools">
+              <button type="button" class="btn btn-ghost btn-sm" id="cropGridBtn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>Guías</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="cropReset"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>Reset</button>
+            </div>
+          </div>
+          <div class="crop-presets">
+            <button type="button" class="crop-chip" data-y="15">Arriba</button>
+            <button type="button" class="crop-chip" data-y="50">Centro</button>
+            <button type="button" class="crop-chip" data-y="85">Abajo</button>
+            <span class="crop-read" id="cropRead">X 50% · Y 35% · 1.0×</span>
+          </div>
+          <p class="crop-note" id="cropNote" hidden>El encuadre se aplica a fondos de imagen y MP4. Los fondos de YouTube los encuadra YouTube.</p>
+        </div>
+        <input type="hidden" id="heroFocoX" value="50">
+        <input type="hidden" id="heroFocoY" value="35">
+        <input type="hidden" id="heroZoom" value="1">
+      </div>
+
       <div class="field"><label>URL imagen</label><input type="text" id="heroImagen" placeholder="https://… o se rellena sola al subir"></div>
       <div class="field"><label>URL vídeo</label><input type="text" id="heroVideo" placeholder="YouTube / Shorts / mp4"></div>
       <div class="grid-2">
