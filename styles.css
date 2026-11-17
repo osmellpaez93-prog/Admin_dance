@@ -181,6 +181,25 @@ svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-l
 .check.on{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4)}
 .check-grid .none{color:var(--faint);font-size:13px;padding:6px}
 
+/* ============ subida de fotos ============ */
+.upload{display:flex;flex-direction:column;gap:10px}
+.upload-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:26px 16px;border:1.5px dashed rgba(245,158,11,.45);border-radius:var(--r);background:rgba(245,158,11,.04);color:var(--muted);cursor:pointer;transition:.2s;min-height:132px}
+.upload-drop svg{width:26px;height:26px;stroke:var(--amber2)}
+.upload-drop strong{color:var(--text);font-size:14px}
+.upload-drop span{font-size:11.5px;color:var(--faint)}
+.upload-drop:hover,.upload-drop.drag,.upload-drop:focus-visible{background:rgba(245,158,11,.1);border-color:var(--amber2);box-shadow:var(--glow);outline:none}
+.upload-preview{display:flex;flex-direction:column;gap:10px;background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);padding:10px}
+.upload-preview img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface)}
+.upload-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.upload-meta .mono{max-width:60%}
+.upload-actions{display:flex;gap:8px}
+.upload-actions .btn{flex:1}
+.upload-progress{display:flex;flex-direction:column;gap:6px}
+.upload-bar{height:6px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.upload-bar span{display:block;height:100%;width:0;background:var(--grad);border-radius:99px;transition:width .25s ease}
+.upload-progress>span{font-size:11.5px;color:var(--muted);letter-spacing:.06em}
+.upload-error{font-size:12.5px;font-weight:600;color:#fca5a5;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.35);border-radius:var(--r-sm);padding:9px 12px}
+
 /* ============ accesos ============ */
 .access-info{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);border-radius:var(--r-sm);padding:12px 14px;font-size:13.5px;color:var(--muted);margin-bottom:16px}
 .access-info strong{color:var(--amber2);font-family:ui-monospace,Menlo,monospace;letter-spacing:.08em}
