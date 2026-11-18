@@ -9,6 +9,27 @@ let currentUserAccessing = null, pendingAccess = {};
 const q = { usuarios: '', contenido: '', sueltos: '', instructores: '', hero: '' };
 const sort = { usuarios: 'nombre', sueltos: 'orden', instructores: 'orden', hero: 'orden' };
 
+// ================= PRESENCIA =================
+// Un alumno se considera "en línea" si su heartbeat tiene menos de 100 s.
+const ONLINE_MS = 100_000;
+const PRESENCE_REFRESH_MS = 30_000;
+
+function presencia(u) {
+  if (!u || !u.last_seen) return { cls: 'presence-off', txt: 'Nunca conectado', online: false };
+  const diff = Date.now() - new Date(u.last_seen).getTime();
+  if (Number.isNaN(diff)) return { cls: 'presence-off', txt: 'Sin datos', online: false };
+  if (diff < ONLINE_MS) return { cls: 'presence-on', txt: 'En línea ahora', online: true };
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return { cls: 'presence-recent', txt: 'Hace un momento', online: false };
+  if (min < 60) return { cls: 'presence-recent', txt: `Hace ${min} min`, online: false };
+  const h = Math.floor(min / 60);
+  if (h < 24) return { cls: 'presence-recent', txt: `Hace ${h} h`, online: false };
+  const d = new Date(u.last_seen);
+  const fecha = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  const hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return { cls: 'presence-off', txt: `${fecha} · ${hora}`, online: false };
+}
+
 // ================= SUBIDA DE FOTOS =================
 const HERO_BUCKET = 'hero';
 const HERO_MAX_BYTES = 5 * 1024 * 1024;
@@ -101,21 +122,47 @@ async function loadData() {
   }
 }
 
+// Refresco silencioso solo de presencia: no toca acordeones ni modales abiertos.
+async function refreshPresence() {
+  if (document.visibilityState !== 'visible') return;
+  try {
+    const [u, a] = await Promise.all([
+      db.from('users').select('*').order('created_at', { ascending: false }),
+      db.from('user_access').select('*')
+    ]);
+    if (u.error || a.error) return;
+    users = u.data || [];
+    access = a.data || [];
+    $('statUsers').textContent = users.length;
+    renderUsers();
+  } catch { /* silencio: la presencia es informativa */ }
+}
+
 // ================= USUARIOS =================
 function renderUsers() {
   const term = q.usuarios.toLowerCase();
   let list = users.filter(u => !term || [u.name, u.access_code, u.phone].some(v => String(v || '').toLowerCase().includes(term)));
   const count = u => access.filter(a => a.user_id === u.id).length;
+  const ts = u => (u.last_seen ? new Date(u.last_seen).getTime() : 0);
   if (sort.usuarios === 'nombre') list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   if (sort.usuarios === 'codigo') list.sort((a, b) => (a.access_code || '').localeCompare(b.access_code || ''));
   if (sort.usuarios === 'accesos') list.sort((a, b) => count(b) - count(a));
+  if (sort.usuarios === 'recientes') list.sort((a, b) => ts(b) - ts(a));
+
+  const online = users.filter(u => presencia(u).online).length;
+  const chip = $('onlineCount');
+  chip.className = `presence ${online > 0 ? 'presence-on' : 'presence-off'}`;
+  chip.innerHTML = `<span class="presence-dot"></span>${online} en línea`;
+
   $('usersTable').innerHTML = list.length ? list.map(u => {
     const n = count(u);
+    const p = presencia(u);
     return `<article class="item">
       <span class="code-tag">${esc(u.access_code || '—')}</span>
       <div class="item-main"><h4>${esc(u.name || 'Sin nombre')}</h4>
         <div class="meta"><span class="meta-item">${I.phone}${esc(u.phone || '—')}</span>
-        <span class="badge ${n > 0 ? 'badge-ok' : ''}">${n} nivel${n !== 1 ? 'es' : ''}</span></div>
+        <span class="badge ${n > 0 ? 'badge-ok' : ''}">${n} nivel${n !== 1 ? 'es' : ''}</span>
+        <span class="presence ${p.cls}" title="Última conexión"><span class="presence-dot"></span>${esc(p.txt)}</span></div>
       </div>
       <div class="item-actions">
         <button class="btn btn-ghost btn-sm" onclick="manageAccess('${u.id}')" title="Accesos">${I.key}<span class="hide-m">Accesos</span></button>
@@ -130,6 +177,7 @@ function editUser(id) {
   $('editUserCode').value = u.access_code || '—';
   $('editUserName').value = u.name || '';
   $('editUserPhone').value = u.phone || '';
+  $('editUserPresence').value = presencia(u).txt;
   openModal('modalEditUser');
 }
 
@@ -602,7 +650,7 @@ async function manageAccess(uid) {
   const u = users.find(x => x.id === uid); if (!u) return;
   currentUserAccessing = uid; pendingAccess = {};
   $('accesosTitle').textContent = `Accesos · ${u.name}`;
-  $('accesosInfo').innerHTML = `Código del alumno: <strong>${esc(u.access_code)}</strong>`;
+  $('accesosInfo').innerHTML = `Código del alumno: <strong>${esc(u.access_code)}</strong> · ${esc(presencia(u).txt)}`;
   const tiene = access.filter(a => a.user_id === uid).map(a => a.nivel_id);
   $('accesosPorCategoria').innerHTML = categorias.map(cat => {
     const ns = niveles.filter(n => n.categoria_id === cat.id);
@@ -856,5 +904,7 @@ document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e =
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { const open = document.querySelectorAll('.modal.active'); if (open.length) closeModal(open[open.length - 1].id); }
 });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refreshPresence(); });
+window.setInterval(refreshPresence, PRESENCE_REFRESH_MS);
 
 loadData();
